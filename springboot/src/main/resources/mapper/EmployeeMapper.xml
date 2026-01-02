@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yicheng.mapper.EmployeeMapper">
+
+    <delete id="deleteById">
+        delete from employee where id = #{id}
+    </delete>
+
+
+<!--查看所有数据 支持“动态 SQL”（如果有名字就查名字，没名字就查所有）。 为了可以搜索表单数据-->
+    <select id="selectAll" resultType="com.yicheng.entity.Employee">
+        select * from employee
+        <where>
+            <if test="name != null and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+
+    <select id="selectByUsername" resultType="com.yicheng.entity.Employee">
+        select * from employee where name = #{name}
+    </select>
+
+    <select id="selectById" resultType="com.yicheng.entity.Employee">
+        select * from employee where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.yicheng.entity.Employee">
+        insert into `employee`
+            (name, gender, age, phone, address, create_time,avatar)
+        values
+            ( #{name}, #{gender}, #{age}, #{phone}, #{address}, #{createTime},#{avatar})
+    </insert>
+
+
+    <update id="updateById" parameterType="com.yicheng.entity.Employee">
+        update employee
+        <set>
+
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createTime != null">avatar = #{avatar}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBatch">
+        delete from employee where id in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

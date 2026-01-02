@@ -1,0 +1,35 @@
+server:
+  port: 9090
+
+
+#数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: root
+    password: 123456
+
+#redis配置
+data:
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+#mybatis配置
+mybatis:
+  # 告诉 MyBatis 去哪里找 XML 文件
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    # 开启 SQL 日志打印 (调试神器)
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 开启驼峰命名映射 (数据库 user_name -> Java userName)
+    map-underscore-to-camel-case: true
+
+
+minio:
+  endpoint: http://localhost:9000  # 注意是 9000，不是 9001
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: yicheng-medical

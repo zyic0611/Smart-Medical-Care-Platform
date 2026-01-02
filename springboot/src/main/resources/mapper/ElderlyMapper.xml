@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yicheng.mapper.ElderlyMapper">
+
+    <resultMap id="ElderlyResultMap" type="com.yicheng.entity.Elderly">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="gender" property="gender" />
+        <result column="age" property="age" />
+        <result column="health_status" property="healthStatus" />
+        <result column="create_time" property="createTime" />
+        <result column="nurse_id" property="nurseId" />
+        <result column="bed_id" property="bedId" />
+
+        <association property="nurse" javaType="com.yicheng.entity.Employee">
+            <id column="emp_id" property="id" />
+            <result column="emp_name" property="name" />
+            <result column="emp_phone" property="phone" />
+        </association>
+
+        <association property="bed" javaType="com.yicheng.entity.Bed">
+            <id column="bed_id_alias" property="id" />
+            <result column="bed_number" property="bedNumber" />
+        </association>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ElderlyResultMap">
+        SELECT
+        /* 老人的字段 */
+        e.*,
+
+        /* 护工的字段 (为了防止重名，我们要起别名 AS) */
+        emp.id AS emp_id,
+        emp.name AS emp_name,
+        emp.phone AS emp_phone,
+
+        /* 床位的字段 */
+        b.id AS bed_id_alias,
+        b.bed_number
+
+        FROM elderly e
+        /* 左连接 护工表：通过 nurse_id 关联 */
+        LEFT JOIN employee emp ON e.nurse_id = emp.id
+        /* 左连接 床位表：通过 bed_id 关联 */
+        LEFT JOIN bed b ON e.bed_id = b.id
+
+        <where>
+            <if test="name != null and name != ''">
+                AND e.name LIKE concat('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY e.id DESC
+    </select>
+
+
+    <select id="selectById" resultType="com.yicheng.entity.Elderly">
+        select * from elderly where id =#{id}
+    </select>
+
+    <insert id="insert" parameterType="com.yicheng.entity.Elderly" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO elderly
+            (name, gender, age, health_status, create_time, nurse_id, bed_id)
+        VALUES
+            (#{name}, #{gender}, #{age}, #{healthStatus}, #{createTime}, #{nurseId}, #{bedId})
+    </insert>
+
+    <update id="updateById" parameterType="com.yicheng.entity.Elderly">
+        UPDATE elderly
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="healthStatus != null">health_status = #{healthStatus},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="nurseId != null">nurse_id = #{nurseId},</if>
+            <if test="bedId != null">bed_id = #{bedId},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM elderly WHERE id = #{id}
+    </delete>
+
+</mapper>

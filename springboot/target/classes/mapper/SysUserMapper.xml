@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yicheng.mapper.SysUserMapper">
+    <select id="selectByUsername" resultType="com.yicheng.entity.SysUser">
+        select * from sys_user where username = #{username}
+    </select>
+
+    <select id="selectById" resultType="com.yicheng.entity.SysUser">
+        select * from sys_user where id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_user(username, password, nickname, role, avatar, create_time)
+        values(#{username}, #{password}, #{nickname}, #{role}, #{avatar}, #{createTime})
+    </insert>
+
+    <update id="updateById">
+        update sys_user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+</mapper>

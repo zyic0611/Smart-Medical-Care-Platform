@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yicheng.mapper.ImageMapper">
+
+    <resultMap id="imgResultMap" type="com.yicheng.entity.MedicalImaging">
+        <id column="id" property="id" />
+        <result column="elder_id" property="elderId" />
+        <result column="file_name" property="fileName" />
+        <result column="file_url" property="fileUrl" />
+        <result column="file_size" property="fileSize" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+
+    <insert id="insert" parameterType="com.yicheng.entity.MedicalImaging">
+        insert into `medical_img`
+            (elder_id, file_name, file_url, file_size)
+        VALUES
+            (#{elderId},#{fileName},#{fileUrl},#{fileSize})
+    </insert>
+
+
+    <select id="selectById" resultMap="imgResultMap">
+        select * from medical_img where id= #{id}
+    </select>
+
+    <select id="selectByElderId" resultMap="imgResultMap">
+        select * from medical_img where elder_id= #{elderId}
+    </select>
+</mapper>
