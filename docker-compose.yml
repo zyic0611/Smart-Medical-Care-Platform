@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 1. Minio (对象存储还是建议用 Docker 跑，方便)
+  minio:
+    image: minio/minio
+    container_name: medical-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+  # 2. 后端 SpringBoot
+  backend:
+    build: ./backend
+    container_name: medical-backend
+    ports:
+      - "9090:9090"  # --- 修改点：端口改成 9090 ---
+    depends_on:
+      - minio        # 不需要 depend MySQL 了，因为它在外面
+    environment:
+      # --- 关键修改点 ---
+      # 1. 地址必须写 host.docker.internal，这代表你的 Mac 本机
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/medical_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      # 2. 填你本机 MySQL 的账号密码
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123
+      # 3. Minio 配置
+      MINIO_ENDPOINT: http://minio:9000
+
+  # 3. 前端 Vue
+  frontend:
+    build: ./frontend
+    container_name: medical-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:8.0
+    container_name: medical-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: smart_medical  # 启动时自动创建一个库
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql  # 【数据卷】把数据库文件存在你项目下的 mysql_data 文件夹里
+
+  redis:
+    image: redis:latest
+    container_name: smartmedical-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+
+volumes:
+  minio-data:

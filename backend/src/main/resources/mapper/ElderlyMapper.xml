@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yicheng.mapper.ElderlyMapper">
+
+    <resultMap id="ElderlyResultMap" type="com.yicheng.entity.Elderly">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="gender" property="gender" />
+        <result column="age" property="age" />
+        <result column="health_status" property="healthStatus" />
+        <result column="create_time" property="createTime" />
+        <result column="nurse_id" property="nurseId" />
+        <result column="bed_id" property="bedId" />
+
+        <association property="nurse" javaType="com.yicheng.entity.Employee" columnPrefix="emp_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="phone" property="phone" />
+        </association>
+
+        <association property="bed" javaType="com.yicheng.entity.Bed" columnPrefix="bed_">
+            <id column="id" property="id" />
+            <result column="number" property="bedNumber" />
+        </association>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ElderlyResultMap">
+        SELECT
+        e.*,
+        emp.id AS emp_id,
+        emp.name AS emp_name,
+        emp.phone AS emp_phone,
+        b.id AS bed_id,
+        b.bed_number AS bed_number
+        FROM elderly e
+        LEFT JOIN employee emp ON e.nurse_id = emp.id
+        LEFT JOIN bed b ON e.bed_id = b.id
+        <where>
+            <if test="name != null and name != ''">
+                AND e.name LIKE concat('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY e.id DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,44 @@
+server:
+  port: 9090
+
+
+#数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/smart_medical?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+
+#redis配置
+data:
+  redis:
+    host: localhost
+    port: 6379
+
+# mybatis-plus 配置
+mybatis-plus:
+  # 1. 告诉 MP 去哪里找 XML 文件
+  mapper-locations: classpath:mapper/*.xml
+
+  # 2. 原生配置项 (日志、驼峰等)
+  configuration:
+    # 开启 SQL 日志打印
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 开启驼峰命名映射 (数据库 user_name -> Java userName)
+    map-underscore-to-camel-case: true
+
+  # 3. 【关键！】全局策略配置 (这是解决报错的核心)
+  global-config:
+    db-config:
+      # 🚫 彻底禁用 DDL 功能，防止启动时报 Runner 类型错误
+      ddl-enabled: false
+      # 如果你的表名和实体名不一致，可以在这里设置前缀，比如表是 tb_user，实体是 User
+      # table-prefix: tb_
+
+
+minio:
+  endpoint: http://localhost:9000  # 注意是 9000，不是 9001
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: yicheng-medical
