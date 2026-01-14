@@ -1,7 +1,7 @@
 package com.yicheng.common;
 
 import cn.hutool.core.util.StrUtil;
-import com.yicheng.entity.SysUser;
+import com.yicheng.modules.user.entity.SysUser;
 import com.yicheng.exception.CustomException;
 import com.yicheng.utils.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;

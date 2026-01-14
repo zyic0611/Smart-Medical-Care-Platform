@@ -1,13 +1,16 @@
 package com.yicheng.controller;
 
 import com.yicheng.common.Result;
-import com.yicheng.utils.MinioUtils; // 1. 引入刚才写的工具类
+import com.yicheng.utils.MinioUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/file")
+@Tag(name="文件控制模块")
 public class FileController {
 
     // 2. 注入 Minio 工具类 (不再需要定义 ROOT_PATH 了)
@@ -18,12 +21,13 @@ public class FileController {
      * 文件上传接口
      * 前端 (el-upload) 会调用这个接口
      */
+    @Operation(summary = "上传文件接口")
     @PostMapping("/upload")
-    public Result<String> upload(MultipartFile file) {
+    public Result<String> upload(MultipartFile file,String prefix) {
         try {
             // 3. 一行代码调用工具类，上传到 MinIO
             // 工具类会自动处理：生成唯一文件名 -> 上传 -> 拼接 URL
-            String url = minioUtils.upload(file);
+            String url = minioUtils.upload(file,prefix);
 
             // 4. 直接返回云端 URL 给前端
             // 比如：http://localhost:9000/yicheng-medical/xxxx-avatar.png

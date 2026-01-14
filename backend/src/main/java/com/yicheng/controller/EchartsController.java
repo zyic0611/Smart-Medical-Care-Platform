@@ -1,16 +1,16 @@
 package com.yicheng.controller;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yicheng.common.Result;
-import com.yicheng.entity.Bed;
-import com.yicheng.entity.Elderly;
-import com.yicheng.entity.Employee;
-import com.yicheng.mapper.BedMapper;
-import com.yicheng.mapper.ElderlyMapper;
-import com.yicheng.mapper.EmployeeMapper;
+import com.yicheng.modules.bed.entity.Bed;
+import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.employee.entity.Employee;
+import com.yicheng.modules.bed.mapper.BedMapper;
+import com.yicheng.modules.elder.mapper.ElderlyMapper;
+import com.yicheng.modules.employee.mapper.EmployeeMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/echarts")
-@Tag(name="")
+@Tag(name="图表接口")
 public class EchartsController {
 
     private static final Logger log = LoggerFactory.getLogger(EchartsController.class);
@@ -42,6 +42,8 @@ public class EchartsController {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+
+    @Operation(summary = "显示图标")
     @GetMapping("/dashboard")
     public Result<Map<String, Object>> getDashboardData() {
         try {
@@ -129,6 +131,7 @@ public class EchartsController {
     }
 
     // 记得保留你原本的 refreshCache 接口，稍微改下 key 即可
+    @Operation(summary = "刷新缓存")
     @GetMapping("/refreshCache")
     public Result<Void> refreshCache() {
         stringRedisTemplate.delete(REDIS_KEY);

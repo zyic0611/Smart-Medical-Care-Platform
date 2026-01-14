@@ -1,13 +1,12 @@
 package com.yicheng;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.yicheng.entity.Bed;
-import com.yicheng.entity.Elderly;
-import com.yicheng.entity.Employee;
-import com.yicheng.service.BedService;
-import com.yicheng.service.BedServiceIml;
-import com.yicheng.service.ElderlyService;
-import com.yicheng.service.EmployeeService;
+import com.yicheng.modules.bed.entity.Bed;
+import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.employee.entity.Employee;
+import com.yicheng.modules.bed.service.BedService;
+import com.yicheng.modules.elder.service.ElderlyService;
+import com.yicheng.modules.employee.service.EmployeeService;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

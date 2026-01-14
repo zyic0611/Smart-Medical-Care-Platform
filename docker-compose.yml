@@ -32,6 +32,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123
       # 3. Minio 配置
       MINIO_ENDPOINT: http://minio:9000
+    profiles: ["app-only"]
+
+
 
   # 3. 前端 Vue
   frontend:
@@ -41,6 +44,7 @@ services:
       - "80:80"
     depends_on:
       - backend
+    profiles: ["app-only"]
 
   db:
     image: mysql:8.0
@@ -60,6 +64,57 @@ services:
     ports:
       - "6379:6379"
     restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: medical-mq
+    restart: always
+    ports:
+      - "5672:5672"   # 代码连接端口
+      - "15672:15672" # 网页管理界面端口
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  nginx-proxy:
+    image: nginx:alpine  # 轻量版Nginx镜像
+    ports:
+      - "9090:80"  # 核心映射：宿主机9090端口 → 容器80端口
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # 挂载自定义配置
+    restart: always  # 容器异常退出自动重启
+
+
+  ai-worker:
+    # 🌟 关键修改：告诉 Docker 去 python 目录找 Dockerfile
+    build: ./ai_work
+    image: medical-ai-server:v1
+    container_name: medical_ai_worker
+    restart: always
+    command: python medical_ai_api.py
+    volumes:
+      # 🌟 挂载路径也要改，把主目录下的 python 文件夹映射进去
+      - ./ai_work:/app
+    environment:
+      - TZ=Asia/Shanghai
+
+
+
+  # 2. 结果查询 API
+  diagnosis-api:
+    build: ./ai_work
+    image: medical-ai-server:v1
+    container_name: medical_diagnosis_api
+    restart: always
+    command: uvicorn diagnosis_api:app --host 0.0.0.0 --port 9091
+    ports:
+      - "9091:9091"
+    volumes:
+      - ./ai_work:/app
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+
 
 
 volumes:

@@ -2,8 +2,8 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yicheng.mapper.BedMapper">
-    <insert id="insert" parameterType="com.yicheng.entity.Bed">
+<mapper namespace="com.yicheng.modules.bed.mapper.BedMapper">
+    <insert id="insert" parameterType="com.yicheng.modules.bed.entity.Bed">
         insert into `bed`
             (id, bed_number, status) VALUES (#{id},#{bedNumber},#{status})
 
@@ -33,7 +33,7 @@
     </delete>
 
 
-    <select id="selectPage" resultType="com.yicheng.entity.Bed">
+    <select id="selectPage" resultType="com.yicheng.modules.bed.entity.Bed">
 
         select * from bed
         <where>
@@ -46,14 +46,14 @@
 
 
 
-    <select id="selectFreeBeds" resultType="com.yicheng.entity.Bed">
+    <select id="selectFreeBeds" resultType="com.yicheng.modules.bed.entity.Bed">
         select * from bed where status=0
 
     </select>
-    <select id="selectByNumber" resultType="com.yicheng.entity.Bed">
+    <select id="selectByNumber" resultType="com.yicheng.modules.bed.entity.Bed">
         select * from bed where bed_number=#{bedNumber}
     </select>
-    <select id="selectById" resultType="com.yicheng.entity.Bed">
+    <select id="selectById" resultType="com.yicheng.modules.bed.entity.Bed">
         select * from bed where id=#{id}
     </select>
 </mapper>

@@ -31,6 +31,11 @@
           <span>床位管理</span>
         </el-menu-item>
 
+        <el-menu-item index="/diagnosis">
+          <el-icon><User /></el-icon>
+          <span>智慧诊断</span>
+        </el-menu-item>
+
 
         <el-menu-item index="/about">
           <el-icon><Setting /></el-icon>

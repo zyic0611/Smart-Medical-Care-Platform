@@ -51,7 +51,13 @@ const router = createRouter({
                     path: 'elderly',
                     name: 'elderly',
                     component: () => import('../views/ElderlyView.vue')
+                },
+                {
+                    path: 'diagnosis',
+                    name: 'diagnosis',
+                    component: () => import('../views/DiagnosisView.vue')
                 }
+
             ]
         },
 

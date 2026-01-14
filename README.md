@@ -1,6 +1,7 @@
 # Smart Medical & Elderly Care Platform (智慧医养管理平台)
 
-![SpringBoot](https://img.shields.io/badge/SpringBoot-3.0-green.svg) ![Vue](https://img.shields.io/badge/Vue-3.0-brightgreen.svg) ![YOLO](https://img.shields.io/badge/AI-YOLOv8-blue.svg)
+![SpringBoot](https://img.shields.io/badge/SpringBoot-3.0-green.svg) ![Vue](https://img.shields.io/badge/Vue-3.0-brightgreen.svg) ![YOLO](https://img.shields.io/badge/AI-YOLOv11-blue.svg)
+
 
 ## 📖 项目简介
 本项目是一套面向高端医养结合机构的综合管理平台，旨在解决传统护理中**档案碎片化**、**资源调度低效**及**医学影像数据孤岛**问题。

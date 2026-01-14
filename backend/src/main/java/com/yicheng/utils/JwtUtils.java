@@ -1,19 +1,15 @@
 package com.yicheng.utils;
 
-import cn.hutool.core.util.StrUtil;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.yicheng.common.UserContext;
-import com.yicheng.entity.SysUser;
+import com.yicheng.modules.user.entity.SysUser;
 import com.yicheng.exception.CustomException;
-import com.yicheng.mapper.SysUserMapper;
+import com.yicheng.modules.user.mapper.SysUserMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Date;
 

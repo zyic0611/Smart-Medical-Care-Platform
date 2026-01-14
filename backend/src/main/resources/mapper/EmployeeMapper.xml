@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yicheng.mapper.EmployeeMapper">
+<mapper namespace="com.yicheng.modules.employee.mapper.EmployeeMapper">
 
     <delete id="deleteById">
         delete from employee where id = #{id}
@@ -10,7 +10,7 @@
 
 
 <!--查看所有数据 支持“动态 SQL”（如果有名字就查名字，没名字就查所有）。 为了可以搜索表单数据-->
-    <select id="selectAll" resultType="com.yicheng.entity.Employee">
+    <select id="selectAll" resultType="com.yicheng.modules.employee.entity.Employee">
         select * from employee
         <where>
             <if test="name != null and name != ''">
@@ -21,17 +21,17 @@
     </select>
 
 
-    <select id="selectByUsername" resultType="com.yicheng.entity.Employee">
+    <select id="selectByUsername" resultType="com.yicheng.modules.employee.entity.Employee">
         select * from employee where name = #{name}
     </select>
 
-    <select id="selectById" resultType="com.yicheng.entity.Employee">
+    <select id="selectById" resultType="com.yicheng.modules.employee.entity.Employee">
         select * from employee where id = #{id}
     </select>
 
 
 
-    <update id="updateById" parameterType="com.yicheng.entity.Employee">
+    <update id="updateById" parameterType="com.yicheng.modules.employee.entity.Employee">
         update employee
         <set>
 

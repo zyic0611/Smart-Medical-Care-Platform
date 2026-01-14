@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.yicheng.mapper.ElderlyMapper">
+<mapper namespace="com.yicheng.modules.elder.mapper.ElderlyMapper">
 
-    <resultMap id="ElderlyResultMap" type="com.yicheng.entity.Elderly">
+    <resultMap id="ElderlyResultMap" type="com.yicheng.modules.elder.entity.Elderly">
         <id column="id" property="id" />
         <result column="name" property="name" />
         <result column="gender" property="gender" />
@@ -15,13 +15,13 @@
         <result column="nurse_id" property="nurseId" />
         <result column="bed_id" property="bedId" />
 
-        <association property="nurse" javaType="com.yicheng.entity.Employee" columnPrefix="emp_">
+        <association property="nurse" javaType="com.yicheng.modules.employee.entity.Employee" columnPrefix="emp_">
             <id column="id" property="id" />
             <result column="name" property="name" />
             <result column="phone" property="phone" />
         </association>
 
-        <association property="bed" javaType="com.yicheng.entity.Bed" columnPrefix="bed_">
+        <association property="bed" javaType="com.yicheng.modules.bed.entity.Bed" columnPrefix="bed_">
             <id column="id" property="id" />
             <result column="number" property="bedNumber" />
         </association>

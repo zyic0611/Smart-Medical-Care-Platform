@@ -148,13 +148,14 @@
             :headers="{ token: token }"
             :show-file-list="false"
             :on-success="handleImgUploadSuccess"
+            :data="{ prefix: 'elder/images/' }"
         >
           <el-button type="primary">
             <el-icon><Upload /></el-icon> 上传新影像
           </el-button>
           <template #tip>
             <div class="el-upload__tip">
-              支持 jpg/png/dcm 格式，文件将存入 MinIO 云存储
+              支持 jpg/png/ 格式，文件将存入 MinIO/elder/images/ 云存储
             </div>
           </template>
         </el-upload>

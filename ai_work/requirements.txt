@@ -1,0 +1,7 @@
+pika
+minio
+ultralytics
+fastapi
+uvicorn
+requests
+jpype1

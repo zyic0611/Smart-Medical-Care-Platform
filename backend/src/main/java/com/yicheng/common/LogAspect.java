@@ -2,9 +2,9 @@ package com.yicheng.common;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil; // Hutool 的 IP 获取工具
-import com.yicheng.entity.SysLog;
-import com.yicheng.entity.SysUser;
-import com.yicheng.mapper.SysLogMapper;
+import com.yicheng.modules.syslog.entity.SysLog;
+import com.yicheng.modules.user.entity.SysUser;
+import com.yicheng.modules.syslog.mapper.SysLogMapper;
 import com.yicheng.utils.JwtUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

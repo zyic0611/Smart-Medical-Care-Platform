@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     //跨域配置
+    /*
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 2. 对所有路径生效
@@ -19,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 4. 允许的方法
                 .allowedHeaders("*")
                 .allowCredentials(true);
-    }
+    }*/
 
 
     // 先把拦截器注入进容器  这样拦截器就可以调用spring中的各种功能

@@ -128,6 +128,7 @@
               :headers="{ token: token }"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
+              :data="{ prefix: 'employee/avater/' }"
           >
             <img v-if="form.avatar" :src="form.avatar" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>

@@ -39,15 +39,20 @@ public class MinioUtils {
      * @param file 前端传来的文件
      * @return 文件的网络访问路径
      */
-    public String upload(MultipartFile file) {
+    public String upload(MultipartFile file,String prefix) {
         try {
             // 1. 获取文件流
             InputStream inputStream = file.getInputStream();
 
-            // 2. 生成唯一文件名 (防止文件名冲突)
-            // 比如: avatar.jpg -> 550e8400-e29b..._avatar.jpg
+            // 2. 生成唯一文件名（前缀 + UUID + 原文件名，避免冲突）
             String originalFilename = file.getOriginalFilename();
-            String fileName = UUID.randomUUID().toString() + "_" + originalFilename;
+            // 处理空文件名（防御性代码）
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                originalFilename = "unknown_file";
+            }
+            // 拼接前缀：比如 prefix=user/avatar/ → user/avatar/UUID_xxx.jpg
+            String fileName = prefix + UUID.randomUUID().toString() + "_" + originalFilename;
+
 
             // 3. 上传到 MinIO
             minioClient.putObject(

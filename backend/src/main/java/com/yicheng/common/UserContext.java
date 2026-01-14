@@ -1,6 +1,6 @@
 package com.yicheng.common;
 
-import com.yicheng.entity.SysUser;
+import com.yicheng.modules.user.entity.SysUser;
 
 public class UserContext {
     // 创建一个 ThreadLocal 变量

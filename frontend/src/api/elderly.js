@@ -9,6 +9,14 @@ export function getElderlyPage(params) {
     })
 }
 
+//分页查询有影像的老人
+export function getElderlyWithImgPage(params) {
+    return request({
+        url: '/elderly/pagewithimages',
+        method: 'get',
+        params: params
+    })
+}
 
 // 新增老人
 // 对应后端: @PostMapping("/elderly/add")

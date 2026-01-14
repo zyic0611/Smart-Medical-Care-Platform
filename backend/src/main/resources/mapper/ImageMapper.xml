@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yicheng.mapper.ImageMapper">
+<mapper namespace="com.yicheng.modules.medicalimg.mapper.ImageMapper">
 
-    <resultMap id="imgResultMap" type="com.yicheng.entity.MedicalImaging">
+    <resultMap id="imgResultMap" type="com.yicheng.modules.medicalimg.entity.MedicalImaging">
         <id column="id" property="id" />
         <result column="elder_id" property="elderId" />
         <result column="file_name" property="fileName" />
@@ -14,7 +14,7 @@
     </resultMap>
 
 
-    <insert id="insert" parameterType="com.yicheng.entity.MedicalImaging">
+    <insert id="insert" parameterType="com.yicheng.modules.medicalimg.entity.MedicalImaging">
         insert into `medical_img`
             (elder_id, file_name, file_url, file_size)
         VALUES

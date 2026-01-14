@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-@MapperScan("com.yicheng.mapper")
+@MapperScan({"com.yicheng.modules.**.mapper"})
 public class SpringbootApplication {
 
 	public static void main(String[] args) {
