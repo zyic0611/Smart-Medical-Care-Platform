@@ -21,12 +21,12 @@
           <span>护工管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/elderlyEntity">
+        <el-menu-item index="/elderly">
           <el-icon><User /></el-icon>
           <span>老人管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/bedEntity">
+        <el-menu-item index="/bed">
           <el-icon><User /></el-icon>
           <span>床位管理</span>
         </el-menu-item>

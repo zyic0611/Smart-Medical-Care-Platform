@@ -194,7 +194,7 @@ import { ref, reactive, onMounted } from 'vue'
 
 import { getElderlyPage ,deleteElderly,updateElderly,addElderly} from '@/api/elderly' //引入API
 import { selectAllEmployee } from '@/api/employee' // 复用员工查询接口拿护工列表！
-import { selectFreeBed } from '@/api/bedEntity'
+import { selectFreeBed } from '@/api/bed'
 import { selectByElderId,addimage} from '@/api/image'
 import { startAsyncDownload, getDownloadStatus, fetchDownloadedFile } from '@/api/asyncdownload.js'
 

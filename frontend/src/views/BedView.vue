@@ -100,7 +100,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { Search, Plus, HomeFilled, Shop, Delete, Check } from '@element-plus/icons-vue' // 引入 Check 和 Delete 图标
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBedPage, addBed, deleteBed } from '@/api/bedEntity' // 确保引入 deleteBed
+import { getBedPage, addBed, deleteBed } from '@/api/bed' // 确保引入 deleteBed
 
 // 基础变量
 const loading = ref(false)
