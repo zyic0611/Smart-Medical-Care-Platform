@@ -1,6 +1,7 @@
 package com.yicheng.modules.attendance.entity;
 
 import cn.hutool.core.date.DateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serial;
@@ -32,10 +33,12 @@ public class AttendanceRecord implements Serializable {
 /**
      * 上班时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime checkInTime;
 /**
      * 下班时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime checkOutTime;
 /**
      * 工作日期

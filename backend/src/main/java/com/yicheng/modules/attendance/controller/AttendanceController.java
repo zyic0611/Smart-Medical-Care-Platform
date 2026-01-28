@@ -9,13 +9,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Tag(name="打卡模块")
-@RequestMapping("/attendance")
+@RequestMapping("/api/attendance")
 public class AttendanceController {
     @Autowired
     @Resource
@@ -30,8 +31,8 @@ public class AttendanceController {
 
 
     @Operation(summary="查询最近15条接口")
-    @PostMapping("/resent")
-    public Result<IPage<AttendanceRecord>> getResent(){
+    @GetMapping("/recent")
+    public Result<IPage<AttendanceRecord>> getRecent(){
         //固定就查15条 1页
         IPage<AttendanceRecord> pageData= attendanceRecordService.getRecentRecordsPage(1,15);
 

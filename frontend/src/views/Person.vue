@@ -94,7 +94,7 @@ const handleUpdateInfo = async () => {
   try {
     // 发送请求更新数据库
     // 注意：后端接口是 /updateUser，返回最新的 user 对象
-    const res = await request.put('/updateUser', form.value)
+    const res = await request.put('/user/updateUser', form.value)
 
     ElMessage.success('信息更新成功')
 
@@ -141,7 +141,7 @@ const handleUpdatePass = () => {
   passRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        await request.put('/updatePassword', passForm)
+        await request.put('/user/updatePassword', passForm)
         ElMessage.success('密码修改成功，请重新登录')
         // 强制退出
         localStorage.removeItem('token')

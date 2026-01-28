@@ -4,14 +4,19 @@ import cn.hutool.core.util.StrUtil;
 import com.yicheng.modules.user.entity.SysUser;
 import com.yicheng.exception.CustomException;
 import com.yicheng.utils.JwtUtils;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * JWT 拦截器：负责检查每一个请求头里有没有带 Token
  */
 public class JwtInterceptor implements HandlerInterceptor {
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -22,11 +27,22 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = request.getHeader("token");
         if (StrUtil.isBlank(token)) throw new CustomException("401", "请登录");
 
-        // 3. 验证并解析出 userId
+        // 3. JWT验证并解析出 userId
         String userId = JwtUtils.validateToken(token);
 
-        // 4. 【关键优化】在这里查一次库，并存入 UserContext
-        // 注意：这里建议直接调用你的 UserService 或 Mapper
+        //4.校验redis中该JWT是否过期
+        String redisToken=stringRedisTemplate.opsForValue().get(RedisConstants.LOGIN_TOKEN_KEY+userId);
+
+        //如果查不到则过期了token
+        if (StrUtil.isBlank(redisToken)) {
+            throw new CustomException("401", "登录已失效，请重新登录");
+        }
+        //如果token不同则该id在别的地方发了token
+        if (!redisToken.equals(token)) {
+            throw new CustomException("401", "您的账号在别处登录，请重新登录");
+        }
+
+        // 5. 把用户信息存入threadlocal
         SysUser currentUser = JwtUtils.getUserById(Integer.valueOf(userId));
         UserContext.setUser(currentUser);
 

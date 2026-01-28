@@ -27,7 +27,7 @@ public class AttendanceRecordServiceIml
         }
 
         Integer userId = currentUser.getId();//获取用户表中的id
-        Integer linkedID=currentUser.getLinkedId();//获取关链表中的id
+        Integer linkedID=currentUser.getLinkId();//获取关链表中的id
 
         LocalDate today=LocalDate.now();//获取日期
 

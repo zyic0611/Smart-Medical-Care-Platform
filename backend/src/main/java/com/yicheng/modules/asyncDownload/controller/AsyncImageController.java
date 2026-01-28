@@ -1,9 +1,9 @@
-package com.yicheng.modules.AsyncDownload.controller;
+package com.yicheng.modules.asyncDownload.controller;
 
 
 import com.yicheng.common.Result;
 import com.yicheng.model.DownloadTaskInfo;
-import com.yicheng.modules.AsyncDownload.service.AsyncDownloadService;
+import com.yicheng.modules.asyncDownload.service.AsyncDownloadService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.GetMapping;

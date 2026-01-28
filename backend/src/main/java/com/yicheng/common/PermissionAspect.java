@@ -29,9 +29,16 @@ public class PermissionAspect {
         //3. 获取注解中需要的角色
         String expectedRole =requireRole.value();
 
+        //获取当前角色
+        String actualRole = currentUser.getRole();
+        // 如果是管理员，直接放行，不进行后续校验
+        if ("ADMIN".equalsIgnoreCase(actualRole)) {
+            return;
+        }
+
         //4. 核心校验：判断角色是不是需要的
         //推荐用 equalsIgnoreCase 忽略大小写
-        if (!expectedRole.equalsIgnoreCase(currentUser.getRole())) {
+        if (!expectedRole.equalsIgnoreCase(actualRole)) {
             // 5. 如果需要的角色，直接抛异常，Controller 的方法不会执行
             throw new CustomException("403", "权限不足，该操作需要"+expectedRole+"权限");
         }

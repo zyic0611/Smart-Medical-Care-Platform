@@ -27,8 +27,8 @@
 
       <el-table-column label="床位号" width="100" align="center">
         <template #default="scope">
-          <el-tag type="warning" v-if="scope.row.bed">
-            {{ scope.row.bed.bedNumber }}
+          <el-tag type="warning" v-if="scope.row.bedEntity">
+            {{ scope.row.bedEntity.bedNumber }}
           </el-tag>
           <span v-else>无</span>
         </template>
@@ -119,10 +119,10 @@
         <el-form-item label="床位号">
           <el-select v-model="form.bedId" placeholder="请选择床位" style="width: 100%" no-data-text="当前无空闲床位">
             <el-option
-                v-for="bed in bedList"
-                :key="bed.id"
-                :label="bed.bedNumber"
-                :value="bed.id"
+                v-for="bedEntity in bedList"
+                :key="bedEntity.id"
+                :label="bedEntity.bedNumber"
+                :value="bedEntity.id"
             />
           </el-select>
         </el-form-item>
@@ -194,7 +194,7 @@ import { ref, reactive, onMounted } from 'vue'
 
 import { getElderlyPage ,deleteElderly,updateElderly,addElderly} from '@/api/elderly' //引入API
 import { selectAllEmployee } from '@/api/employee' // 复用员工查询接口拿护工列表！
-import { selectFreeBed } from '@/api/bed'
+import { selectFreeBed } from '@/api/bedEntity'
 import { selectByElderId,addimage} from '@/api/image'
 import { startAsyncDownload, getDownloadStatus, fetchDownloadedFile } from '@/api/asyncdownload.js'
 
@@ -281,8 +281,8 @@ const handleEdit = async (row) => {
   if (row.nurse) {
     form.value.nurseId = row.nurse.id // 确保下拉框能回显
   }
-  if (row.bed) {
-    form.value.bedId = row.bed.id     // 确保下拉框能回显
+  if (row.bedEntity) {
+    form.value.bedId = row.bedEntity.id     // 确保下拉框能回显
   }
   // ⬆️⬆️⬆️ 新增结束 ⬆️⬆️⬆️
 
@@ -293,16 +293,16 @@ const handleEdit = async (row) => {
   await loadOptions()
 
   // 把当前占用的床位塞进去
-  if (row.bed) {
+  if (row.bedEntity) {
     // 检查一下列表里是不是已经有了 (防止重复添加)
-    const exists = bedList.value.some(item => item.id === row.bed.id)
+    const exists = bedList.value.some(item => item.id === row.bedEntity.id)
 
     if (!exists) {
       // 如果列表里没有这张床，我们就手动加进去
       bedList.value.push({
-        id: row.bed.id,
+        id: row.bedEntity.id,
         // 加个后缀提示用户，体验更好
-        bedNumber: row.bed.bedNumber + ' (当前占用)'
+        bedNumber: row.bedEntity.bedNumber + ' (当前占用)'
       })
     }
   }

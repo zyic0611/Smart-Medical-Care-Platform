@@ -21,7 +21,7 @@ public class JwtUtils {
     private static final String SECRET = "my-super-secret-key-123";
 
     // 过期时间：12小时 (单位毫秒)
-    private static final long EXPIRE_TIME = 100L * 365 * 24 * 60 * 60 * 1000; //修改为100年 方便接口测试
+    private static final long EXPIRE_TIME = 12 * 60 * 60 * 1000L;
 
 
 
@@ -71,6 +71,7 @@ public class JwtUtils {
 
         } catch (Exception e) {
             // 如果验证失败（过期、被篡改），抛出业务异常
+            e.printStackTrace();
             throw new CustomException("401", "Token 验证失败，请重新登录");
         }
     }

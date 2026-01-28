@@ -14,7 +14,16 @@
       <div class="action-buttons">
         <el-input v-model="queryParams.bedNumber" placeholder="搜索: A-1-101-1" style="width: 200px; margin-right: 12px" clearable @clear="loadData" />
         <el-button type="primary" @click="loadData"><el-icon><Search /></el-icon> 搜索</el-button>
-        <!-- 保留新增按钮（如需移除可直接删除这行） -->
+
+        <el-button
+            type="danger"
+            plain
+            :disabled="selectedBedIds.length === 0"
+            @click="handleBatchDelete"
+            v-if="userRole === 'ADMIN'">
+          <el-icon><Delete /></el-icon> 批量删除 ({{ selectedBedIds.length }})
+        </el-button>
+
         <el-button type="success" @click="handleAdd" v-if="userRole === 'ADMIN'"><el-icon><Plus /></el-icon> 智能新增</el-button>
       </div>
     </div>
@@ -31,22 +40,28 @@
         <div class="room-grid" v-if="Object.keys(groupedRooms).length > 0">
           <div v-for="(beds, roomNum) in groupedRooms" :key="roomNum" class="room-box">
             <div class="room-header">{{ roomNum }} 房间</div>
-            <div class="bed-layout">
-              <div v-for="bed in beds" :key="bed.id"
-                   :class="['bed-slot', bed.status === 1 ? 'is-occupied' : 'is-vacant']">
+            <div class="bedEntity-layout">
+              <div v-for="bedEntity in beds" :key="bedEntity.id"
+                   :class="[
+                     'bedEntity-slot',
+                     bedEntity.status === 1 ? 'is-occupied' : 'is-vacant',
+                     isSelected(bedEntity.id) ? 'is-selected' : ''
+                   ]"
+                   @click="toggleSelection(bedEntity)">
 
-                <el-tooltip :content="bed.status === 1 ? '已占用' : '空闲'">
-                  <div class="bed-info">
+                <div v-if="isSelected(bedEntity.id)" class="selected-badge">
+                  <el-icon><Check /></el-icon>
+                </div>
+
+                <el-tooltip :content="bedEntity.status === 1 ? '已占用 (不可删除)' : '点击选中/取消'">
+                  <div class="bedEntity-info">
                     <el-icon :size="22">
-                      <HomeFilled v-if="bed.status === 1" />
+                      <HomeFilled v-if="bedEntity.status === 1" />
                       <Shop v-else />
                     </el-icon>
-                    <span class="bed-label">{{ bed.bedNumber.split('-')[3] }}号床</span>
+                    <span class="bedEntity-label">{{ bedEntity.bedNumber.split('-')[3] }}号床</span>
                   </div>
                 </el-tooltip>
-
-                <!-- 【修改1：完全移除编辑/删除按钮区域】 -->
-                <!-- 原bed-actions代码已删除，不再显示编辑/删除按钮 -->
               </div>
             </div>
           </div>
@@ -60,39 +75,17 @@
         <el-form-item label="当前位置">
           <el-tag size="large" effect="plain">{{ currentBuilding }} 栋 - {{ currentFloor }} 楼</el-tag>
         </el-form-item>
-
         <el-form-item label="房间号" required>
-          <el-select
-              v-model="tempRoomNum"
-              placeholder="请选择或输入"
-              filterable
-              allow-create
-              style="width: 100%"
-              @change="autoSuggestBedIndex"
-          >
-            <el-option
-                v-for="room in existingRooms"
-                :key="room"
-                :label="room + ' 房间'"
-                :value="room"
-            />
+          <el-select v-model="tempRoomNum" placeholder="请选择或输入" filterable allow-create style="width: 100%" @change="autoSuggestBedIndex">
+            <el-option v-for="room in existingRooms" :key="room" :label="room + ' 房间'" :value="room" />
           </el-select>
         </el-form-item>
-
         <el-form-item label="床位序号" required>
           <el-input-number v-model="tempBedIndex" :min="1" :max="4" />
           <span style="margin-left: 10px; color: #999">号床 (最多4张)</span>
         </el-form-item>
-
         <el-form-item label="预览编号">
-          <el-tag type="warning" effect="dark">
-            {{ currentBuilding }}-{{ currentFloor }}-{{ tempRoomNum || '?' }}-{{ tempBedIndex }}
-          </el-tag>
-        </el-form-item>
-
-        <!-- 【修改2：移除编辑相关的状态选择，只保留新增的预设状态】 -->
-        <el-form-item label="预设状态">
-          <el-tag type="success">🟢 空闲 (新床位默认可用)</el-tag>
+          <el-tag type="warning" effect="dark">{{ currentBuilding }}-{{ currentFloor }}-{{ tempRoomNum || '?' }}-{{ tempBedIndex }}</el-tag>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -105,9 +98,9 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { Search, Plus, HomeFilled, Shop } from '@element-plus/icons-vue' // 【修改3：移除Edit、Delete图标导入】
+import { Search, Plus, HomeFilled, Shop, Delete, Check } from '@element-plus/icons-vue' // 引入 Check 和 Delete 图标
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBedPage, addBed, updateBed, deleteBed } from '@/api/bed'
+import { getBedPage, addBed, deleteBed } from '@/api/bedEntity' // 确保引入 deleteBed
 
 // 基础变量
 const loading = ref(false)
@@ -116,6 +109,8 @@ const userRole = ref('')
 const formTitle = ref('')
 const allBeds = ref([])
 const form = ref({})
+// 【修改3：新增选中ID数组】
+const selectedBedIds = ref([])
 
 // 筛选状态
 const currentBuilding = ref('A')
@@ -129,33 +124,28 @@ const tempBedIndex = ref(1)
 // === 计算属性：按房间分组渲染 ===
 const groupedRooms = computed(() => {
   const rooms = {}
-  const filtered = allBeds.value.filter(bed => {
-    const parts = bed.bedNumber.split('-')
+  const filtered = allBeds.value.filter(bedEntity => {
+    const parts = bedEntity.bedNumber.split('-')
     return parts[0] === currentBuilding.value && parts[1] === currentFloor.value
   })
-  filtered.forEach(bed => {
-    const parts = bed.bedNumber.split('-')
+  filtered.forEach(bedEntity => {
+    const parts = bedEntity.bedNumber.split('-')
     if (parts.length >= 3) {
-      const r = parts[2]; if (!rooms[r]) rooms[r] = []; rooms[r].push(bed)
+      const r = parts[2]; if (!rooms[r]) rooms[r] = []; rooms[r].push(bedEntity)
     }
   })
   return Object.keys(rooms).sort().reduce((obj, key) => { obj[key] = rooms[key]; return obj; }, {});
 })
 
-// === 计算属性：当前层已有房间号列表 ===
 const existingRooms = computed(() => {
   return [...new Set(Object.keys(groupedRooms.value))].sort()
 })
 
-// === 智能建议与校验：超过4张床给出提示 ===
 const autoSuggestBedIndex = (val) => {
   if (groupedRooms.value[val]) {
     const currentBeds = groupedRooms.value[val];
-    if (currentBeds.length >= 4) {
-      ElMessage.warning('该房间床位已满(4张)，请确认是否继续添加')
-    }
-    const maxIdx = currentBeds.reduce((max, bed) => {
-      const idx = parseInt(bed.bedNumber.split('-')[3])
+    const maxIdx = currentBeds.reduce((max, bedEntity) => {
+      const idx = parseInt(bedEntity.bedNumber.split('-')[3])
       return idx > max ? idx : max
     }, 0)
     tempBedIndex.value = maxIdx >= 4 ? 4 : maxIdx + 1
@@ -169,15 +159,62 @@ const loadData = async () => {
   loading.value = true
   const res = await getBedPage(queryParams)
   allBeds.value = res.records || []
+  // 切换楼层或刷新后，清空选中状态，防止误删
+  selectedBedIds.value = []
   loading.value = false
 }
 
 const handleBuildingChange = () => { currentFloor.value = '1'; loadData(); }
 const handleFloorChange = () => { loadData(); }
 
+// === 【修改4：多选逻辑】 ===
+const isSelected = (id) => {
+  return selectedBedIds.value.includes(id)
+}
+
+const toggleSelection = (bedEntity) => {
+  // 只有管理员能操作
+  if (userRole.value !== 'ADMIN') return;
+
+  // 占用状态建议不给选，或者选了让后端报错。这里为了体验，可以在前端简单拦截提示
+  if (bedEntity.status === 1) {
+    // 可选策略：允许选中，让后端报错；或者直接不让选。
+    // 这里我们允许选中，以便用户尝试删除时看到后端返回的具体“占用无法删除”的错误
+  }
+
+  const id = bedEntity.id
+  const index = selectedBedIds.value.indexOf(id)
+  if (index > -1) {
+    selectedBedIds.value.splice(index, 1) // 取消选中
+  } else {
+    selectedBedIds.value.push(id) // 选中
+  }
+}
+
+// === 【修改5：批量删除逻辑】 ===
+const handleBatchDelete = () => {
+  if (selectedBedIds.value.length === 0) return
+
+  ElMessageBox.confirm(
+      `确认要删除选中的 ${selectedBedIds.value.length} 个床位吗？(如床位正在使用将无法删除)`,
+      '删除警告',
+      { confirmButtonText: '狠心删除', cancelButtonText: '取消', type: 'warning' }
+  ).then(async () => {
+    try {
+      // 核心：将数组转为逗号分隔的字符串 "1,2,3"
+      const idsStr = selectedBedIds.value.join(',')
+      await deleteBed(idsStr)
+      ElMessage.success('删除成功')
+      loadData()
+    } catch (error) {
+      // 错误由拦截器统一处理，如果后端抛出“床位正在使用”，这里会自动显示
+    }
+  })
+}
+
 // 新增
 const handleAdd = () => {
-  form.value = { id: null, status: 0 } // 显式设置 id 为空，状态为 0
+  form.value = { id: null, status: 0 }
   tempRoomNum.value = ''
   tempBedIndex.value = 1
   formTitle.value = '新增床位'
@@ -188,20 +225,13 @@ const handleAdd = () => {
 const handleConfirmSave = async () => {
   if (!tempRoomNum.value) return ElMessage.warning('请输入房间号')
   if (tempBedIndex.value > 4) return ElMessage.error('单个房间最多支持4张床位')
-
-  // 拼接
   form.value.bedNumber = `${currentBuilding.value}-${currentFloor.value}-${tempRoomNum.value}-${tempBedIndex.value}`
-
-  // 【修改4：移除编辑分支，只保留新增逻辑】
-  form.value.status = 0 // 强制新增状态为空闲
+  form.value.status = 0
   await addBed(form.value)
   ElMessage.success('新增成功')
-
   dialogVisible.value = false
   loadData()
 }
-
-// 【修改5：完全移除handleEdit和handleDelete方法】
 
 onMounted(() => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -211,20 +241,60 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 保持原有样式，移除bed-actions相关样式（因为界面已无该元素） */
 .ward-container { padding: 15px; background: #f5f7fa; min-height: 100vh; }
 .header-banner { background: #fff; padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.main-title { font-size: 18px; font-weight: bold; }
 .floor-sidebar { background: #fff; border-radius: 12px; margin-right: 15px; padding: 20px 0; height: calc(100vh - 160px); }
 .building-indicator { text-align: center; font-size: 18px; font-weight: bold; color: #409EFF; margin-bottom: 20px; }
 .room-grid { display: flex; flex-wrap: wrap; gap: 15px; }
 .room-box { width: 160px; background: #fff; border-radius: 10px; border: 1px solid #e4e7ed; overflow: hidden; }
 .room-header { background: #f5f7fa; padding: 6px; text-align: center; font-size: 13px; font-weight: bold; border-bottom: 1px solid #e4e7ed; }
-.bed-layout { padding: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
-.bed-slot { position: relative; width: 55px; height: 65px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.is-vacant { background-color: #f0f9eb; color: #67c23a; border: 1px solid #c2e7b0; }
-.is-occupied { background-color: #fef0f0; color: #f56c6c; border: 1px solid #fbc4c4; }
-.bed-info { display: flex; flex-direction: column; align-items: center; }
-.bed-label { font-size: 11px; margin-top: 4px; }
-/* 【修改6：移除bed-actions相关样式】 */
+.bedEntity-layout { padding: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+
+/* === 修改后的床位样式 === */
+.bedEntity-slot {
+  position: relative;
+  width: 55px;
+  height: 65px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent; /* 预留边框位置 */
+}
+
+/* 空闲状态 */
+.is-vacant { background-color: #f0f9eb; color: #67c23a; border-color: #c2e7b0; }
+/* 占用状态 */
+.is-occupied { background-color: #fef0f0; color: #f56c6c; border-color: #fbc4c4; opacity: 0.8; }
+
+/* === 核心：选中态样式 === */
+.is-selected {
+  border: 2px solid #409EFF !important; /* 强制变蓝 */
+  background-color: #ecf5ff !important;
+  color: #409EFF !important;
+  transform: scale(1.05); /* 微微放大 */
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 选中时的右上角对钩 */
+.selected-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #409EFF;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  z-index: 10;
+}
+
+.bedEntity-info { display: flex; flex-direction: column; align-items: center; }
+.bedEntity-label { font-size: 11px; margin-top: 4px; }
 </style>

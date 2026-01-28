@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 // 1. 这个注解表示：我是个“大喇叭”，专门监听所有 Controller 的动静
-@RestControllerAdvice("com.yicheng.controller")
+@RestControllerAdvice("com.yicheng.modules")
 public class GlobalExceptionHandler {
 
     // 2. 这个注解表示：我要捕获 Exception 类型的异常（也就是所有异常）

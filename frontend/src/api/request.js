@@ -54,7 +54,13 @@ request.interceptors.response.use(
 
         if (res.code ==200) {
             return res.data
-        } else {
+        } else if (res.code === '401'){
+            localStorage.removeItem('token'); // 清理旧 Token
+            localStorage.removeItem('user');  // 清理用户信息
+            ElMessage.error(response.data.msg || '登录过期，请重新登录');
+            window.location.href = '/login';   // 跳转回登录页
+            return Promise.reject(response.data);
+        }else {
             ElMessage.error(res.msg || '业务处理失败')
             return Promise.reject(new Error(res.msg || 'Error'))
         }

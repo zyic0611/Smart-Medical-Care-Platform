@@ -1,4 +1,4 @@
-package com.yicheng.modules.AsyncDownload.service;
+package com.yicheng.modules.asyncDownload.service;
 
 
 import com.yicheng.modules.medicalimg.entity.MedicalImaging;

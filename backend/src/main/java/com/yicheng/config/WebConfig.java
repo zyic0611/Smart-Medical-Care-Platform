@@ -33,8 +33,12 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor())
                 .addPathPatterns("/**")        // 1. 拦截所有请求
-                .excludePathPatterns("/login") // 2. 放行登录接口 (一定要放行，否则死循环)
-                .excludePathPatterns("/register") // 3 放行注册
+                .excludePathPatterns("/user/login",
+                        "/user/register",
+                        "/user/code",
+                        "/user/login/mobile",
+                        "/user/logout") // 2. 放行用户相关
+                .excludePathPatterns("/error")
                 .excludePathPatterns("/files/**")// 4 放行文件访问 (看头像不需要登录)
                 .excludePathPatterns("/employee/export") // 5 放行导出为excell 由于window.open 没法自动带 Header 里的 token
                 .excludePathPatterns("/doc.html",

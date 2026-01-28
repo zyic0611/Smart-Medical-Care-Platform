@@ -23,26 +23,21 @@ spring:
       port: 6379
 
 
-# mybatis-plus 配置
 mybatis-plus:
-  # 1. 告诉 MP 去哪里找 XML 文件
   mapper-locations: classpath:mapper/*.xml
-
-  # 2. 原生配置项 (日志、驼峰等)
   configuration:
-    # 开启 SQL 日志打印
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    # 开启驼峰命名映射 (数据库 user_name -> Java userName)
     map-underscore-to-camel-case: true
-
-  # 3. 【关键！】全局策略配置 (这是解决报错的核心)
   global-config:
     db-config:
-      # 🚫 彻底禁用 DDL 功能，防止启动时报 Runner 类型错误
       ddl-enabled: false
-      # 如果你的表名和实体名不一致，可以在这里设置前缀，比如表是 tb_user，实体是 User
-      # table-prefix: tb_
-
+      # --- 💡 新增逻辑删除配置 ---
+      # 逻辑未删除值 (数据库中存 0 表示有效)
+      logic-not-delete-value: 0
+      # 逻辑已删除值 (数据库中存 1 表示已删除)
+      logic-delete-value: 1
+      # 如果你希望全局所有表都默认逻辑删除字段叫 is_deleted，可以加下面这行
+      # logic-delete-field: is_deleted
 
 minio:
   endpoint: http://localhost:9000  # 注意是 9000，不是 9001

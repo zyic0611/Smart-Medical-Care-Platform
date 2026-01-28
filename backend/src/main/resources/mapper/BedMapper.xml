@@ -1,59 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yicheng.modules.bed.mapper.BedMapper">
-    <insert id="insert" parameterType="com.yicheng.modules.bed.entity.Bed">
-        insert into `bed`
-            (id, bed_number, status) VALUES (#{id},#{bedNumber},#{status})
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yicheng.modules.bedEntity.mapper.BedMapper">
 
-    </insert>
+    <resultMap id="bedVoMap" type="com.yicheng.modules.bedEntity.pojo.vo.BedVO">
+        <id property="id" column="id"/>
+        <result property="bedNumber" column="bed_number"/>
+        <result property="status" column="status"/>
+    </resultMap>
 
-
-
-    <update id="updateStatus">
-
-        update bed set status =#{status} where id =#{id}
-
-    </update>
-
-
-    <update id="updateById">
-        update bed
-        <set>
-            <if test = "bedNumber != null" >bed_number=#{bedNumber},</if>
-            <if test = "status != null" >status=#{status}</if>
-        </set>
-        where id =#{id}
-    </update>
-
-
-    <delete id="deleteById">
-        delete from bed where id = #{id}
-    </delete>
-
-
-    <select id="selectPage" resultType="com.yicheng.modules.bed.entity.Bed">
-
-        select * from bed
+    <select id="selectBedPage" resultMap="bedVoMap">
+        SELECT t1.* FROM bedEntity t1
         <where>
-            <if test="bedNumber != null and bedNumber != ''">
-                and bed_number like concat('%', #{bedNumber}, '%')
+            AND t1.is_deleted = 0
+
+            <if test="bedEntity.bedNumber != null and bedEntity.bedNumber != ''">
+                AND t1.bed_number LIKE CONCAT('%', #{bedEntity.bedNumber}, '%')
+            </if>
+            <if test="bedEntity.status != null">
+                AND t1.status = #{bedEntity.status}
             </if>
         </where>
-        order by id desc
+        ORDER BY t1.id DESC
     </select>
 
+    <select id="selectFreeBeds" resultMap="bedVoMap">
+        SELECT * FROM bedEntity
+        WHERE status = 0 AND is_deleted = 0  </select>
 
-
-    <select id="selectFreeBeds" resultType="com.yicheng.modules.bed.entity.Bed">
-        select * from bed where status=0
-
-    </select>
-    <select id="selectByNumber" resultType="com.yicheng.modules.bed.entity.Bed">
-        select * from bed where bed_number=#{bedNumber}
-    </select>
-    <select id="selectById" resultType="com.yicheng.modules.bed.entity.Bed">
-        select * from bed where id=#{id}
-    </select>
 </mapper>

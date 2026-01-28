@@ -19,7 +19,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.util.StringUtils;
 
 @Service
-public class EmployeeServiceIml extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
+public class EmployeeServiceIml
+        extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
 
     @Resource
     private EmployeeMapper employeeMapper;

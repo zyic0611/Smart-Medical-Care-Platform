@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.yicheng.modules.bed.entity.Bed;
-import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.bed.pojo.entity.BedEntity;
+import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
 import com.yicheng.exception.CustomException;
 import com.yicheng.modules.bed.mapper.BedMapper;
 import com.yicheng.modules.elder.mapper.ElderlyMapper;
@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 @Service
-public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> implements IService<Elderly>, ElderlyService {
+public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, ElderlyEntity> implements IService<ElderlyEntity>, ElderlyService {
 
     @Resource
     private ElderlyMapper elderlyMapper;
@@ -33,8 +33,8 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
      * 所以读操作是安全的。
      */
     @Override
-    public IPage<Elderly> selectPage(Integer pageNum, Integer pageSize, String name) {
-        Page<Elderly> page = new Page<>(pageNum, pageSize);
+    public IPage<ElderlyEntity> selectPage(Integer pageNum, Integer pageSize, String name) {
+        Page<ElderlyEntity> page = new Page<>(pageNum, pageSize);
         return elderlyMapper.selectAll(page, name);
     }
 
@@ -44,26 +44,26 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void addElderlyWithBed(Elderly elderly) {
+    public void addElderlyWithBed(ElderlyEntity elderlyEntity) {
         // --- A. 校验逻辑 ---
-        if (elderly.getName() == null || elderly.getName().trim().isEmpty()) {
+        if (elderlyEntity.getName() == null || elderlyEntity.getName().trim().isEmpty()) {
             throw new CustomException("400", "姓名不能为空");
         }
         // 默认填写入住时间
-        if (elderly.getCreateTime() == null) {
-            elderly.setCreateTime(LocalDate.now());
+        if (elderlyEntity.getCreateTime() == null) {
+            elderlyEntity.setCreateTime(LocalDate.now());
         }
 
         // --- B. 保存老人 ---
         // 使用 MP 自带的 save，它只处理数据库存在的字段
-        this.save(elderly);
+        this.save(elderlyEntity);
 
         // --- C. 锁定床位 ---
-        if (elderly.getBedId() != null) {
+        if (elderlyEntity.getBedId() != null) {
             // 使用 Lambda 更新床位状态，防止 BedMapper 也有 XML 问题
-            bedMapper.update(null, new LambdaUpdateWrapper<Bed>()
-                    .eq(Bed::getId, elderly.getBedId())
-                    .set(Bed::getStatus, 1)); // 1-占用
+            bedMapper.update(null, new LambdaUpdateWrapper<BedEntity>()
+                    .eq(BedEntity::getId, elderlyEntity.getBedId())
+                    .set(BedEntity::getStatus, 1)); // 1-占用
         }
     }
 
@@ -73,27 +73,27 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updateElderlyWithBed(Elderly elderly) {
+    public void updateElderlyWithBed(ElderlyEntity elderlyEntity) {
         // --- A. 处理床位变更逻辑 ---
-        Elderly oldData = getById(elderly.getId());
+        ElderlyEntity oldData = getById(elderlyEntity.getId());
         // 防空判断，防止查不到数据报错
         if (oldData != null) {
             Integer oldBedId = oldData.getBedId();
-            Integer newBedId = elderly.getBedId();
+            Integer newBedId = elderlyEntity.getBedId();
 
             // 如果床位发生了变化
             if (!Objects.equals(oldBedId, newBedId)) {
                 // 1. 释放旧床位
                 if (oldBedId != null) {
-                    bedMapper.update(null, new LambdaUpdateWrapper<Bed>()
-                            .eq(Bed::getId, oldBedId)
-                            .set(Bed::getStatus, 0)); // 0-空闲
+                    bedMapper.update(null, new LambdaUpdateWrapper<BedEntity>()
+                            .eq(BedEntity::getId, oldBedId)
+                            .set(BedEntity::getStatus, 0)); // 0-空闲
                 }
                 // 2. 锁定新床位
                 if (newBedId != null) {
-                    bedMapper.update(null, new LambdaUpdateWrapper<Bed>()
-                            .eq(Bed::getId, newBedId)
-                            .set(Bed::getStatus, 1)); // 1-占用
+                    bedMapper.update(null, new LambdaUpdateWrapper<BedEntity>()
+                            .eq(BedEntity::getId, newBedId)
+                            .set(BedEntity::getStatus, 1)); // 1-占用
                 }
             }
         }
@@ -102,14 +102,14 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
         // 我们不把 elderly 实体传给 update，而是自己构建一个 Wrapper
         // 这样 MyBatis 就绝对不会去 XML 里找 bedNumber 了！
 
-        LambdaUpdateWrapper<Elderly> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.eq(Elderly::getId, elderly.getId()) // 指定更新哪个 ID
-                .set(Elderly::getName, elderly.getName())
-                .set(Elderly::getGender, elderly.getGender())
-                .set(Elderly::getAge, elderly.getAge())
-                .set(Elderly::getHealthStatus, elderly.getHealthStatus())
-                .set(Elderly::getNurseId, elderly.getNurseId())
-                .set(Elderly::getBedId, elderly.getBedId());
+        LambdaUpdateWrapper<ElderlyEntity> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.eq(ElderlyEntity::getId, elderlyEntity.getId()) // 指定更新哪个 ID
+                .set(ElderlyEntity::getName, elderlyEntity.getName())
+                .set(ElderlyEntity::getGender, elderlyEntity.getGender())
+                .set(ElderlyEntity::getAge, elderlyEntity.getAge())
+                .set(ElderlyEntity::getHealthStatus, elderlyEntity.getHealthStatus())
+                .set(ElderlyEntity::getNurseId, elderlyEntity.getNurseId())
+                .set(ElderlyEntity::getBedId, elderlyEntity.getBedId());
 
         // 如果允许修改入住时间，取消下面注释
         // .set(Elderly::getCreateTime, elderly.getCreateTime());
@@ -125,14 +125,14 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
     @Override
     public void deleteById(Integer id) {
         // 1. 先查出来，为了获取他占用的床位 ID
-        Elderly elderly = this.getById(id);
+        ElderlyEntity elderlyEntity = this.getById(id);
 
-        if (elderly != null) {
+        if (elderlyEntity != null) {
             // 2. 释放床位
-            if (elderly.getBedId() != null) {
-                bedMapper.update(null, new LambdaUpdateWrapper<Bed>()
-                        .eq(Bed::getId, elderly.getBedId())
-                        .set(Bed::getStatus, 0)); // 0-空闲
+            if (elderlyEntity.getBedId() != null) {
+                bedMapper.update(null, new LambdaUpdateWrapper<BedEntity>()
+                        .eq(BedEntity::getId, elderlyEntity.getBedId())
+                        .set(BedEntity::getStatus, 0)); // 0-空闲
             }
             // 3. 删除老人
             this.removeById(id);
@@ -140,7 +140,7 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
     }
 
     @Override
-    public IPage<Elderly> listElderlyWithImagingByPage(Integer pageNum, Integer pageSize){
+    public IPage<ElderlyEntity> listElderlyWithImagingByPage(Integer pageNum, Integer pageSize){
         // 1. 处理默认值（防止前端不传参数）
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
@@ -150,7 +150,7 @@ public class ElderlyServiceIml extends ServiceImpl<ElderlyMapper, Elderly> imple
         }
 
         // 2. 构建分页对象（Page是IPage的实现类）
-        IPage<Elderly> page = new Page<>(pageNum, pageSize);
+        IPage<ElderlyEntity> page = new Page<>(pageNum, pageSize);
 
         return  elderlyMapper.listElderlyWithImagingByPage(page);
     }

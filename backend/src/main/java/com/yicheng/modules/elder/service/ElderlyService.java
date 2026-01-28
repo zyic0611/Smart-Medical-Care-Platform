@@ -2,20 +2,20 @@ package com.yicheng.modules.elder.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface ElderlyService extends IService<Elderly> {
-    IPage<Elderly> selectPage(Integer pageNum, Integer pageSize, String name);
+public interface ElderlyService extends IService<ElderlyEntity> {
+    IPage<ElderlyEntity> selectPage(Integer pageNum, Integer pageSize, String name);
 
     @Transactional(rollbackFor = Exception.class)
-    void addElderlyWithBed(Elderly elderly);
+    void addElderlyWithBed(ElderlyEntity elderlyEntity);
 
     @Transactional(rollbackFor = Exception.class)
-    void updateElderlyWithBed(Elderly elderly);
+    void updateElderlyWithBed(ElderlyEntity elderlyEntity);
 
     @Transactional(rollbackFor = Exception.class)
     void deleteById(Integer id);
 
-    IPage<Elderly> listElderlyWithImagingByPage(Integer pageNum, Integer pageSize);
+    IPage<ElderlyEntity> listElderlyWithImagingByPage(Integer pageNum, Integer pageSize);
 }

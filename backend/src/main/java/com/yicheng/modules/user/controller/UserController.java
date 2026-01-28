@@ -2,22 +2,24 @@ package com.yicheng.modules.user.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.yicheng.common.Result;
+import com.yicheng.modules.user.dto.MobileLoginRequest;
+import com.yicheng.modules.user.dto.SysUserDto;
 import com.yicheng.modules.user.entity.SysUser;
 import com.yicheng.modules.user.service.UserService;
 import com.yicheng.utils.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @Tag(name="用户管理模块")
+@RequestMapping("/user")
 public class UserController {
 
     @Resource
@@ -29,20 +31,25 @@ public class UserController {
     @PostMapping("/login")
     @Operation(summary ="用户登录接口")
     // 接收参数改成 SysUser (或者 Map)
-    public Result<Map<String, Object>> login(@RequestBody SysUser user) {
+    public Result<Map<String, Object>> login(@RequestBody SysUserDto user) {
         // 1. 调用 UserService 登录
-        SysUser dbUser = userService.login(user);
+        return Result.success(userService.login(user));
+    }
 
-        // 2. 生成 Token
-        String token = JwtUtils.createToken(dbUser.getId().toString(), dbUser.getUsername());
+    @PostMapping("/code")//发送短信接口
+    @Operation(summary = "发送短信接口")
+    public Result<String> code(@RequestParam String phone) {
+        userService.sendcode(phone);
+        return Result.success("发送验证码成功");
+    }
 
-        // 3. 返回
-        Map<String, Object> map = new HashMap<>();
-        map.put("token", token);
-        dbUser.setPassword(null); // 擦除密码
-        map.put("user", dbUser);  // 返回的是 SysUser 对象
 
-        return Result.success(map);
+
+    @PostMapping("/logout")
+    @Operation(summary = "退出登陆接口")
+    public Result<String> logout(HttpServletRequest request) {//必须传参数 因为不走拦截器 就拿不到threadlocal
+        userService.logout(request);
+        return Result.success("退出登录成功");
     }
 
 
@@ -53,6 +60,15 @@ public class UserController {
         userService.register(sysuser);
         return Result.success();
     }
+
+
+    @PostMapping("/login/mobile")
+    @Operation(summary = "手机登陆接口")
+    public Result<Map<String,Object>> mobile(@RequestBody MobileLoginRequest mobileLoginRequest) {
+        return Result.success(userService.loginByMobile(mobileLoginRequest.getPhone(),mobileLoginRequest.getCode()));
+    }
+
+
 
 
     //更新密码接口
@@ -81,7 +97,7 @@ public class UserController {
 
         // 5. 设置新密码并保存
         currentUser.setPassword(newPass);
-        userService.update(currentUser); // 复用 Service 的 update 方法
+        userService.updateById(currentUser);
 
         return Result.success();
     }
@@ -104,11 +120,10 @@ public class UserController {
         user.setId(currentUser.getId());
 
         // 3. 调用 Service 更新 (只更新非空字段)
-        // 注意：这里复用的是 UserService 的 update 方法
-        userService.update(user);
+        userService.updateById(user);
 
         // 4. 【重要】为了让前端能更新缓存里的头像，我们需要把最新的数据查出来返回去
-        SysUser latestUser = userService.selectById(currentUser.getId());
+        SysUser latestUser = userService.getById(currentUser.getId());
 
         // 5. 安全擦除密码 (永远不要把密码返回给前端)
         latestUser.setPassword(null);

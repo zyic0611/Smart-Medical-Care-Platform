@@ -1,10 +1,10 @@
 package com.yicheng;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.yicheng.modules.bed.entity.Bed;
-import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.bed.pojo.entity.BedEntity;
+import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
 import com.yicheng.modules.employee.entity.Employee;
-import com.yicheng.modules.bed.service.BedService;
+import com.yicheng.modules.bed.service.IBedService;
 import com.yicheng.modules.elder.service.ElderlyService;
 import com.yicheng.modules.employee.service.EmployeeService;
 import jakarta.annotation.Resource;
@@ -23,7 +23,7 @@ public class DataMockTest {
     private ElderlyService elderlyService;
 
     @Resource
-    private BedService bedService;
+    private IBedService IBedService;
 
     @Resource
     private EmployeeService employeeService;
@@ -90,24 +90,24 @@ public class DataMockTest {
 
         System.out.println("🚀 开始生成 200 位老人数据...");
         long start = System.currentTimeMillis();
-        List<Elderly> batchList = new ArrayList<>();
+        List<ElderlyEntity> batchList = new ArrayList<>();
 
         for (int i = 0; i < 200; i++) {
-            Elderly elderly = new Elderly();
+            ElderlyEntity elderlyEntity = new ElderlyEntity();
 
             // 1. 基础信息
-            elderly.setName(generateName());
-            elderly.setGender(random.nextBoolean() ? "男" : "女");
-            elderly.setAge(60 + random.nextInt(41)); // 60-100岁
+            elderlyEntity.setName(generateName());
+            elderlyEntity.setGender(random.nextBoolean() ? "男" : "女");
+            elderlyEntity.setAge(60 + random.nextInt(41)); // 60-100岁
 
             // 2. 健康状态 (概率控制：70%健康，20%一般，10%严重)
             int chance = random.nextInt(100);
             if (chance < 70) {
-                elderly.setHealthStatus("0");
+                elderlyEntity.setHealthStatus("0");
             } else if (chance < 90) {
-                elderly.setHealthStatus("1");
+                elderlyEntity.setHealthStatus("1");
             } else {
-                elderly.setHealthStatus("2");
+                elderlyEntity.setHealthStatus("2");
             }
 
             // 3. 手机号 & 地址 (如果你的实体类有这些字段的话)
@@ -115,13 +115,13 @@ public class DataMockTest {
             // elderly.setAddress(addresses[random.nextInt(addresses.length)] + random.nextInt(100) + "号");
 
             // 4. 入住时间 (最近10年)
-            elderly.setCreateTime(LocalDate.now().minusDays(random.nextInt(365 * 10)));
+            elderlyEntity.setCreateTime(LocalDate.now().minusDays(random.nextInt(365 * 10)));
 
             // 5. 关联字段 (默认为空，等待分配)
             // elderly.setBedId(null);
             // elderly.setNurseId(null);
 
-            batchList.add(elderly);
+            batchList.add(elderlyEntity);
         }
 
         elderlyService.saveBatch(batchList);
@@ -142,11 +142,11 @@ public class DataMockTest {
     public void mockBedData() {
         System.out.println("🛏️ 正在重置并清空床位数据...");
         // 建议：如果你已经按照我之前的建议修改了实体类，这里会自动处理自增 ID
-        bedService.remove(new QueryWrapper<>());
+        IBedService.remove(new QueryWrapper<>());
 
         System.out.println("🚀 开始生成 500 张标准化床位...");
         long start = System.currentTimeMillis();
-        List<Bed> batchList = new ArrayList<>();
+        List<BedEntity> batchList = new ArrayList<>();
 
         String[] buildings = {"A", "B", "C", "D", "E"};
 
@@ -159,22 +159,22 @@ public class DataMockTest {
 
                     // 每个房间放 2 张床
                     for (int bedIndex = 1; bedIndex <= 2; bedIndex++) {
-                        Bed bed = new Bed();
+                        BedEntity bedEntity = new BedEntity();
 
                         // 核心修改：组合成标准化格式 A-1-101-1
                         String finalBedNumber = building + "-" + floor + "-" + roomId + "-" + bedIndex;
 
-                        bed.setBedNumber(finalBedNumber);
-                        bed.setStatus(0); // 初始全部为空闲
+                        bedEntity.setBedNumber(finalBedNumber);
+                        bedEntity.setStatus(0); // 初始全部为空闲
 
-                        batchList.add(bed);
+                        batchList.add(bedEntity);
                     }
                 }
             }
         }
 
         // 批量插入数据库
-        bedService.saveBatch(batchList);
+        IBedService.saveBatch(batchList);
 
         long end = System.currentTimeMillis();
         System.out.println("✅ 标准化床位数据生成完成！");

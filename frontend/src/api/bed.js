@@ -6,7 +6,7 @@ import request from './request'
 // (对应后端 GET /bed/list)
 export function selectFreeBed(params) {
     return request({
-        url: '/bed/list',
+        url: '/bed/freelist',
         method: 'get'
     })
 }
@@ -40,9 +40,10 @@ export function updateBed(data) {
 
 
 //删除
-export function deleteBed(id) {
+export function deleteBed(ids) {
     return request({
-        url: `/bed/delete/${id}`,
-        method: 'delete'
+        url: '/bed/remove', // 路径改为你后端定义的 /remove
+        method: 'post',     // 方法改为 post
+        params: { ids }     // 注意：@RequestParam 对应的是 params 传参
     })
 }

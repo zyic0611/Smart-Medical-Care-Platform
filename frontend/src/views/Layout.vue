@@ -21,12 +21,12 @@
           <span>护工管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/elderly">
+        <el-menu-item index="/elderlyEntity">
           <el-icon><User /></el-icon>
           <span>老人管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/bed">
+        <el-menu-item index="/bedEntity">
           <el-icon><User /></el-icon>
           <span>床位管理</span>
         </el-menu-item>
@@ -34,6 +34,11 @@
         <el-menu-item index="/diagnosis">
           <el-icon><User /></el-icon>
           <span>智慧诊断</span>
+        </el-menu-item>
+
+        <el-menu-item index="/attendance">
+          <el-icon><Setting /></el-icon>
+          <span>考勤打卡</span>
         </el-menu-item>
 
 

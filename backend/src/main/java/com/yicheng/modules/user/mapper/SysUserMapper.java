@@ -1,17 +1,11 @@
 package com.yicheng.modules.user.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yicheng.modules.user.entity.SysUser;
 
-public interface SysUserMapper {
+public interface SysUserMapper extends BaseMapper<SysUser> {
     // 登录用的查重/查账号
     SysUser selectByUsername(String username);
 
-    // 注册/新增用户
-    int insert(SysUser sysUser);
 
-    // 根据ID查用户 (给 Token 解析用)
-    SysUser selectById(Integer id);
-
-    // 修改密码/头像用
-    int updateById(SysUser sysUser);
 }

@@ -21,7 +21,7 @@
             <result column="phone" property="phone" />
         </association>
 
-        <association property="bed" javaType="com.yicheng.modules.bed.entity.Bed" columnPrefix="bed_">
+        <association property="bed" javaType="com.yicheng.modules.bed.pojo.entity.Bed" columnPrefix="bed_">
             <id column="id" property="id" />
             <result column="number" property="bedNumber" />
         </association>

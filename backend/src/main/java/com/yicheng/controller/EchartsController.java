@@ -4,8 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yicheng.common.Result;
-import com.yicheng.modules.bed.entity.Bed;
-import com.yicheng.modules.elder.entity.Elderly;
+import com.yicheng.modules.bed.pojo.entity.BedEntity;
+import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
 import com.yicheng.modules.employee.entity.Employee;
 import com.yicheng.modules.bed.mapper.BedMapper;
 import com.yicheng.modules.elder.mapper.ElderlyMapper;
@@ -69,7 +69,7 @@ public class EchartsController {
 
             // 3. 床位数据 (总数 & 已占用)
             Long totalBeds = bedMapper.selectCount(null);
-            Long occupiedBeds = bedMapper.selectCount(new QueryWrapper<Bed>().eq("status", 1));
+            Long occupiedBeds = bedMapper.selectCount(new QueryWrapper<BedEntity>().eq("status", 1));
             resultMap.put("totalBeds", totalBeds);
             resultMap.put("occupiedBeds", occupiedBeds);
             // 计算入住率 (百分比)
@@ -78,10 +78,10 @@ public class EchartsController {
 
             // ================= B. 饼图1：老人健康评级分布 =================
             // 获取所有老人数据 (数据量大时建议用 Group By SQL，这里为了演示方便用 Java 流处理)
-            List<Elderly> elderlyList = elderlyMapper.selectList(null);
-            Map<String, Long> healthGroup = elderlyList.stream()
+            List<ElderlyEntity> elderlyEntityList = elderlyMapper.selectList(null);
+            Map<String, Long> healthGroup = elderlyEntityList.stream()
                     .filter(e -> e.getHealthStatus() != null)
-                    .collect(Collectors.groupingBy(Elderly::getHealthStatus, Collectors.counting()));
+                    .collect(Collectors.groupingBy(ElderlyEntity::getHealthStatus, Collectors.counting()));
 
             List<Map<String, Object>> healthPie = new ArrayList<>();
             healthPie.add(buildPieItem("健康 (Lv0)", healthGroup.getOrDefault("0", 0L)));
