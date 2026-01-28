@@ -9,7 +9,8 @@ public class RedisConstants {
     //用户TOKEN的KEY
     public static final String LOGIN_TOKEN_KEY = "login:token:";
 
-    //床位表的缓存KEY
+    //表的缓存KEY
     public static final String BED_CACHE_KEY = "cache:bed:";
+    public static final String ELDERLY_CACHE_KEY = "elderly:bed:";
 
 }
