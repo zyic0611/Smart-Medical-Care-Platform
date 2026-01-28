@@ -37,7 +37,24 @@
                 AND e.health_status = #{param.healthStatus}
             </if>
         </where>
-        ORDER BY e.create_time DESC
+        ORDER BY e.check_in_date DESC
+    </select>
+
+    <select id="listElderlyWithImagingByPage" resultMap="ElderlyVoMap">
+        SELECT e.*,
+               emp.name AS nurse_name,
+               b.bed_number AS bed_number
+        FROM elderly e
+                 LEFT JOIN employee emp ON e.nurse_id = emp.id
+                 LEFT JOIN bed b ON e.bed_id = b.id
+        WHERE e.is_deleted = 0
+            /* 核心逻辑：只查那些在影像表(imaging)里存在记录的老人 */
+          AND EXISTS (
+            SELECT 1 FROM medical_img img
+            WHERE img.elder_id = e.id
+              AND img.is_deleted = 0
+        )
+        ORDER BY e.check_in_date DESC
     </select>
 
 </mapper>

@@ -20,10 +20,12 @@ public class ElderlyEntity {
     private Integer age;
     private String healthStatus;
 
-    // 建议改名：入住时间属于业务数据
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private LocalDate checkInDate;
 
     private Integer nurseId; // 外键
     private Integer bedId;   // 外键
+
+    @TableLogic
+    private Integer isDeleted;
 }

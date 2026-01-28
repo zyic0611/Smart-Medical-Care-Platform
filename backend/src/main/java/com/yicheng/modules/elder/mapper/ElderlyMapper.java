@@ -2,26 +2,26 @@ package com.yicheng.modules.elder.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
+import com.yicheng.modules.elder.pojo.vo.ElderlyVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Select;
 
 
 public interface ElderlyMapper  extends BaseMapper<ElderlyEntity> {
+
+
     /**
-     * 查询老人列表（同时带出护工信息和床位信息）
-     * @param name 老人姓名 (用于搜索)
+     * 分页查询老人信息 (包含护工、床位联查)
+     * * @param page  分页参数 (必须放在第一个，MP 插件才会自动拦截并处理分页 SQL)
+     * @param param 查询条件封装在 VO 或 DTO 中
+     * @return 分页结果，泛型使用 ElderlyVO
      */
-    @ResultMap("ElderlyResultMap")
-    IPage<ElderlyEntity> selectAll(IPage<ElderlyEntity> page, @Param("name") String name);
+    IPage<ElderlyVO> selectElderlyPage(IPage<ElderlyVO> page, @Param("param")ElderlyVO param );
 
 
-    @Select("""
-        SELECT DISTINCT e.* FROM elderlyEntity e 
-        INNER JOIN medical_img mi ON e.id = mi.elder_id 
-        ORDER BY e.create_time DESC
-        """)
-    IPage<ElderlyEntity> listElderlyWithImagingByPage(IPage<ElderlyEntity> page);
+    IPage<ElderlyVO> listElderlyWithImagingByPage(IPage<ElderlyVO> page);
 
 }
