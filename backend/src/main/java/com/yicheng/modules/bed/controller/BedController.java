@@ -19,9 +19,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @AllArgsConstructor
@@ -93,12 +91,8 @@ public class BedController {
     @ApiOperationSupport(order = 5)
     @Operation(summary = "删除床位", description = "传入逗号分隔的id字符串")
     public Result<Boolean> remove(@Parameter(description = "主键集合", required = true) @RequestParam String ids) {
-        // 字符串转 Long 列表
-        List<Long> idList = Arrays.stream(ids.split(","))
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
-        // 调用 Service 的逻辑删除方法
-        return Result.success(IBedService.deleteLogic(idList));
+
+        return Result.success(IBedService.deleteLogic(ids));
     }
 
     /**

@@ -12,17 +12,19 @@ import com.yicheng.exception.CustomException;
 import com.yicheng.modules.bed.mapper.BedMapper;
 import com.yicheng.modules.bed.pojo.vo.BedVO;
 import com.yicheng.utils.CacheClient;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
-public class IBedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements IBedService {
+@RequiredArgsConstructor
+public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements IBedService {
 
 
     private final CacheClient cacheClient;
@@ -109,9 +111,13 @@ public class IBedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implement
     * */
 
     @Override
-    public boolean deleteLogic(List<Long> ids){
+    public boolean deleteLogic(String ids){
 
-        for(Long id:ids){
+        List<Long> idList = Arrays.stream(ids.split(","))
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        for(Long id:idList){
             BedEntity dbBedEntity = baseMapper.selectById(id);
             if(dbBedEntity ==null){
                 continue;
@@ -123,11 +129,11 @@ public class IBedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implement
         }
 
         //执行删除逻辑
-        boolean isSuccess=this.removeByIds(ids);
+        boolean isSuccess=this.removeByIds(idList);
 
         //删除对应的缓存
         if(isSuccess){
-            for(Long id:ids){
+            for(Long id:idList){
                 String key= RedisConstants.BED_CACHE_KEY+id;
                 cacheClient.delete(key);
 

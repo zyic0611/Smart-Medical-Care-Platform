@@ -4,9 +4,11 @@ package com.yicheng.modules.bed.pojo.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
+@TableName("bed")
 public class BedEntity {
     @TableId(value = "id", type = IdType.AUTO)
     Integer id;

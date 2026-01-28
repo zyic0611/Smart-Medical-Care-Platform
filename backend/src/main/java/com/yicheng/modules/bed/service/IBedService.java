@@ -18,7 +18,7 @@ public interface IBedService extends IService<BedEntity> {
 
     boolean updateByDTO(BedUpdateDTO bedUpdateDTO);
 
-    boolean deleteLogic(List<Long> ids);
+    boolean deleteLogic(String ids);
 
     BedVO detail(Long id);
 }
