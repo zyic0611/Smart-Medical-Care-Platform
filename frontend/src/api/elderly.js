@@ -41,11 +41,10 @@ export function updateElderly(data) {
 }
 
 // 删除老人
-// 对应后端: @Mapping("/elderly/delete/{id}")
-//id是一个数字
-export function deleteElderly(id) {
+export function deleteElderly(ids) {
     return request({
-        url: `/elderly/delete/${id}`,//注意这里用了反引号 `拼接 URL
-        method: 'delete'
+        url: '/elderly/remove',
+        method: 'post',
+        params:{ids}
     })
 }
