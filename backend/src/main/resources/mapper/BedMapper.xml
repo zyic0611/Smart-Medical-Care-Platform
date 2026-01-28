@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yicheng.modules.bedEntity.mapper.BedMapper">
+<mapper namespace="com.yicheng.modules.bed.mapper.BedMapper">
 
-    <resultMap id="bedVoMap" type="com.yicheng.modules.bedEntity.pojo.vo.BedVO">
+    <resultMap id="bedVoMap" type="com.yicheng.modules.bed.pojo.vo.BedVO">
         <id property="id" column="id"/>
         <result property="bedNumber" column="bed_number"/>
         <result property="status" column="status"/>
     </resultMap>
 
     <select id="selectBedPage" resultMap="bedVoMap">
-        SELECT t1.* FROM bedEntity t1
+        SELECT t1.* FROM bed t1
         <where>
             AND t1.is_deleted = 0
 
-            <if test="bedEntity.bedNumber != null and bedEntity.bedNumber != ''">
-                AND t1.bed_number LIKE CONCAT('%', #{bedEntity.bedNumber}, '%')
+            <if test="bed.bedNumber != null and bed.bedNumber != ''">
+                AND t1.bed_number LIKE CONCAT('%', #{bed.bedNumber}, '%')
             </if>
-            <if test="bedEntity.status != null">
-                AND t1.status = #{bedEntity.status}
+            <if test="bed.status != null">
+                AND t1.status = #{bed.status}
             </if>
         </where>
         ORDER BY t1.id DESC
     </select>
 
     <select id="selectFreeBeds" resultMap="bedVoMap">
-        SELECT * FROM bedEntity
+        SELECT * FROM bed
         WHERE status = 0 AND is_deleted = 0  </select>
 
 </mapper>
