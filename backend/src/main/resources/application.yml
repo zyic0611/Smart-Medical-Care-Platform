@@ -45,3 +45,10 @@ minio:
   secretKey: minioadmin
   bucketName: yicheng-medical
 
+
+knife4j:
+  enable: true
+  setting:
+    # 必须开启这个配置，order 注解才会生效
+    enable-operation-order: true
+
