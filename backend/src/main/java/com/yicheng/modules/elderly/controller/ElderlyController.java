@@ -1,4 +1,4 @@
-package com.yicheng.modules.elder.controller;
+package com.yicheng.modules.elderly.controller;
 
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,10 +7,10 @@ import com.yicheng.common.AutoLog;
 import com.yicheng.common.RequireRole;
 import com.yicheng.common.Result;
 import com.yicheng.common.RoleConstant;
-import com.yicheng.modules.elder.pojo.dto.ElderlyDTO;
-import com.yicheng.modules.elder.pojo.dto.ElderlyUpdateDTO;
-import com.yicheng.modules.elder.pojo.vo.ElderlyVO;
-import com.yicheng.modules.elder.service.IElderlyService;
+import com.yicheng.modules.elderly.pojo.dto.ElderlyDTO;
+import com.yicheng.modules.elderly.pojo.dto.ElderlyUpdateDTO;
+import com.yicheng.modules.elderly.pojo.vo.ElderlyVO;
+import com.yicheng.modules.elderly.service.IElderlyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

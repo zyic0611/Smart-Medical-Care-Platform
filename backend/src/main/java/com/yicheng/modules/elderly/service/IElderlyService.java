@@ -1,13 +1,11 @@
-package com.yicheng.modules.elder.service;
+package com.yicheng.modules.elderly.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yicheng.modules.bed.pojo.vo.BedVO;
-import com.yicheng.modules.elder.pojo.dto.ElderlyDTO;
-import com.yicheng.modules.elder.pojo.dto.ElderlyUpdateDTO;
-import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
-import com.yicheng.modules.elder.pojo.vo.ElderlyVO;
-import org.springframework.transaction.annotation.Transactional;
+import com.yicheng.modules.elderly.pojo.dto.ElderlyDTO;
+import com.yicheng.modules.elderly.pojo.dto.ElderlyUpdateDTO;
+import com.yicheng.modules.elderly.pojo.entity.ElderlyEntity;
+import com.yicheng.modules.elderly.pojo.vo.ElderlyVO;
 
 public interface IElderlyService extends IService<ElderlyEntity> {
 

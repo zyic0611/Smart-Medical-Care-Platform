@@ -1,4 +1,4 @@
-package com.yicheng.modules.elder.pojo.dto;
+package com.yicheng.modules.elderly.pojo.dto;
 
 
 import jakarta.validation.constraints.NotNull;

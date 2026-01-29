@@ -1,13 +1,10 @@
-package com.yicheng.modules.elder.mapper;
+package com.yicheng.modules.elderly.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.yicheng.modules.elder.pojo.entity.ElderlyEntity;
-import com.yicheng.modules.elder.pojo.vo.ElderlyVO;
+import com.yicheng.modules.elderly.pojo.entity.ElderlyEntity;
+import com.yicheng.modules.elderly.pojo.vo.ElderlyVO;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.ResultMap;
-import org.apache.ibatis.annotations.Select;
 
 
 public interface ElderlyMapper  extends BaseMapper<ElderlyEntity> {

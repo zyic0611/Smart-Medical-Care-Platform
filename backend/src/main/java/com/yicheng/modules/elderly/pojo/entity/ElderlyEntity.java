@@ -1,9 +1,7 @@
-package com.yicheng.modules.elder.pojo.entity;
+package com.yicheng.modules.elderly.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.yicheng.modules.employee.entity.Employee;
-import com.yicheng.modules.bed.pojo.entity.BedEntity;
 import lombok.Data;
 
 import java.time.LocalDate;
