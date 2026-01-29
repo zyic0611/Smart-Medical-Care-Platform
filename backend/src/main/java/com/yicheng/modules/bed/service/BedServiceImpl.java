@@ -11,14 +11,14 @@ import com.yicheng.modules.bed.pojo.entity.BedEntity;
 import com.yicheng.exception.CustomException;
 import com.yicheng.modules.bed.mapper.BedMapper;
 import com.yicheng.modules.bed.pojo.vo.BedVO;
+import com.yicheng.modules.sysdict.service.ISysDictService;
 import com.yicheng.utils.CacheClient;
+import com.yicheng.utils.Func;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -29,11 +29,14 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
 
     private final CacheClient cacheClient;
 
+    private final ISysDictService sysDictService;
+
     //分页查询
     @Override
     public IPage<BedVO> selectBedPage(IPage<BedVO>page, BedVO bedVO){
-        //将分页查询交给mapper xml文件处理 返回VO
-        return page.setRecords(baseMapper.selectBedPage(page,bedVO));
+        IPage<BedVO> result=page.setRecords(baseMapper.selectBedPage(page,bedVO));
+        this.setParaStr(result.getRecords());
+        return  result;
     }
 
 
@@ -59,7 +62,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
         //2 .实体转换 DTO -> Entity
         BedEntity bedEntity = new BedEntity();
         // 使用 Spring 提供的工具类进行拷贝 (把 DTO 的属性存进 Entity)
-        BeanUtils.copyProperties(bedAddDTO, bedEntity);
+        BeanUtil.copyProperties(bedAddDTO, bedEntity);
 
 
         if(bedEntity.getStatus()==null){
@@ -72,7 +75,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
     * 修改床位
     * */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateByDTO(BedUpdateDTO bedUpdateDTO){
         //1, 安全检查 检查ID是否存在
         BedEntity dbBedEntity =baseMapper.selectById(bedUpdateDTO.getId());
@@ -91,7 +94,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
 
         //3 转换并更新
         BedEntity bedEntity = new BedEntity();
-        BeanUtils.copyProperties(bedUpdateDTO, bedEntity);
+        BeanUtil.copyProperties(bedUpdateDTO, bedEntity);
 
         //4 先更新数据库 根据ID进行更新非NULL的字段
         boolean isSuccess=this.updateById(bedEntity);
@@ -113,31 +116,27 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
     @Override
     public boolean deleteLogic(String ids){
 
-        List<Long> idList = Arrays.stream(ids.split(","))
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
+        List<Long> idList = Func.toLongList(ids);
 
-        for(Long id:idList){
-            BedEntity dbBedEntity = baseMapper.selectById(id);
-            if(dbBedEntity ==null){
-                continue;
-            }
-            if(dbBedEntity.getStatus()==1){
-                //床位正在被占用 无法删除
-                throw new CustomException("400", "床位 " + dbBedEntity.getBedNumber() + " 正在使用，无法删除");
+        if(Func.isEmpty(idList)){
+            return false;
+        }
+
+        //一次查出所有的床位 避免N+1
+        List<BedEntity> bedToCheck = this.listByIds(idList);
+
+        for(BedEntity bedEntity : bedToCheck){
+            if(bedEntity.getStatus()==1){
+                throw new CustomException("400", "床位 " + bedEntity.getBedNumber() + " 正在使用，无法删除");
             }
         }
 
-        //执行删除逻辑
-        boolean isSuccess=this.removeByIds(idList);
+        // 4. 执行批量删除
+        boolean isSuccess = this.removeByIds(idList);
 
-        //删除对应的缓存
+        // 5. 批量删除缓存 (循环删 Redis 问题不大，因为 Redis 极快
         if(isSuccess){
-            for(Long id:idList){
-                String key= RedisConstants.BED_CACHE_KEY+id;
-                cacheClient.delete(key);
-
-            }
+            idList.forEach(id -> cacheClient.delete(RedisConstants.BED_CACHE_KEY + id));
         }
 
         return isSuccess;
@@ -160,9 +159,27 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, BedEntity> implements
             return null;//如果查到空对象 直接返回
         }
 
-
-        return BeanUtil.copyProperties(bedEntity,BedVO.class);
+        BedVO bedVO = BeanUtil.copyProperties(bedEntity,BedVO.class);
+        this.setParaStr(Collections.singletonList(bedVO));
+        return bedVO;
 
 
     }
+
+
+    private void setParaStr(List<BedVO> list){
+
+        if(Func.isEmpty(list)){
+            return;
+        }
+
+        //内存组装
+        list.forEach(vo -> {
+            //填充字典
+            vo.setStatusStr(sysDictService.getValue("bed_status",Func.toStr(vo.getStatus())));
+        });
+    }
+
+
+
 }
