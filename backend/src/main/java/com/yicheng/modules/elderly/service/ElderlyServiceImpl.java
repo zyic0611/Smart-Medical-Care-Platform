@@ -7,33 +7,40 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yicheng.common.RedisConstants;
+import com.yicheng.common.enums.ResultCode;
 import com.yicheng.modules.bed.pojo.entity.BedEntity;
 import com.yicheng.modules.bed.service.IBedService;
 import com.yicheng.modules.elderly.pojo.dto.ElderlyDTO;
 import com.yicheng.modules.elderly.pojo.dto.ElderlyUpdateDTO;
 import com.yicheng.modules.elderly.pojo.entity.ElderlyEntity;
-import com.yicheng.exception.CustomException;
+import com.yicheng.common.exception.CustomException;
 import com.yicheng.modules.bed.mapper.BedMapper;
 import com.yicheng.modules.elderly.mapper.ElderlyMapper;
 import com.yicheng.modules.elderly.pojo.vo.ElderlyVO;
-import com.yicheng.modules.employee.entity.Employee;
-import com.yicheng.modules.employee.service.EmployeeService;
-import com.yicheng.modules.sysdict.mapper.SysDictMapper;
-import com.yicheng.modules.sysdict.pojo.entity.SysDict;
+import com.yicheng.modules.employee.pojo.entity.EmployeeEntity;
+import com.yicheng.modules.employee.service.IEmployeeService;
 import com.yicheng.modules.sysdict.service.ISysDictService;
 import com.yicheng.utils.CacheClient;
 import com.yicheng.utils.Func;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity> implements IService<ElderlyEntity>, IElderlyService {
 
     //操作表数据
@@ -45,9 +52,11 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
 
     //外键
     private final IBedService bedService;
-    private final EmployeeService employeeService;
+    private final IEmployeeService IEmployeeService;
 
     private final CacheClient cacheClient;
+    private final RedissonClient redissonClient;
+    private final StringRedisTemplate stringRedisTemplate;
 
 
     /**
@@ -65,39 +74,74 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
 
 
     /**
-     * 2. 新增老人 (带床位联动)
+     * 2. 新增老人 (带床位联动) 分布式锁
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean addElderlyWithBed(ElderlyDTO elderlyDTO) {
-
+        //1 数据默认初始化
         // 默认入住时间为当前时间
         if (elderlyDTO.getCheckInDate() == null) elderlyDTO.setCheckInDate(LocalDate.now());
-
         // 默认健康
         if(elderlyDTO.getNurseId() == null) elderlyDTO.setNurseId(0);
-
         // 类型转换
         ElderlyEntity elderlyEntity = BeanUtil.copyProperties(elderlyDTO, ElderlyEntity.class);
 
-        // 锁定床位
-        if (elderlyEntity.getBedId() != null) updateBedStatus(elderlyEntity.getBedId(),1);
+        //2 如果不需要床位 则不涉及多表关联 直接保存返回 不加锁 提升性能
+        // 2. 修正 NPE 风险：先获取原始 ID 判断
+        Integer bedId = elderlyDTO.getBedId();
+        if (bedId == null) {
+            return this.save(elderlyEntity);
+        }
 
-        return this.save(elderlyEntity);
+        //3 开启Redisson锁
+        String lockKey=RedisConstants.LOCK_BED_ASSIGN_KEY+bedId;
+        RLock lock=redissonClient.getLock(lockKey);
+        boolean isLock=false;
+        try{
+            isLock=lock.tryLock(0,10,TimeUnit.SECONDS);
+            if(!isLock){
+                //上锁失败 则该床位正在被分配中
+                throw new CustomException(ResultCode.LOCK_FAIL);
+            }
+            //即使拿到了redisson锁 也要通过数据库影响行数确认
+            //防止逻辑漏洞或者锁超时 影响的并发问题
+            boolean updateSuccess=this.updateBedStatus(elderlyEntity.getBedId(),1);
+            if(!updateSuccess){
+                throw new CustomException(ResultCode.BED_OCCUPIED);
+            }
+            return this.save(elderlyEntity);
+
+        }catch (RuntimeException e){
+            throw e;
+        }catch (Exception e) {
+            log.error("新增老人异常", e);
+            throw new RuntimeException("系统繁忙，请联系管理员");
+        }finally {
+            //释放锁必须保证当前线程持有锁并且上锁成功
+            if(isLock&&lock.isHeldByCurrentThread()){
+                lock.unlock();
+            }
+        }
 
     }
 
     /**
-     * 3. 更新老人
+     * 3. 更新老人 带延迟双删除
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean updateElderlyWithBed(ElderlyUpdateDTO elderlyUpdateDTO) {
+
+        String key=RedisConstants.BED_CACHE_KEY+elderlyUpdateDTO.getBedId();
+        //第一次删除redis缓存
+        stringRedisTemplate.delete(key);
+
         // 1 查旧数据
         ElderlyEntity oldData = getById(elderlyUpdateDTO.getId());
 
         //2 空判断
-        if (oldData == null) throw new CustomException("404","老人不存在");
+        if (oldData == null) throw new CustomException(ResultCode.ELDER_EXIST);
 
 
         //3 床位改变
@@ -107,10 +151,30 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
         }
 
         //4 更新
-
         BeanUtil.copyProperties(elderlyUpdateDTO,oldData);
 
-        return this.updateById(oldData);
+        boolean updateSuccess= this.updateById(oldData);
+
+        //异步延迟第二次删除缓存
+        if(updateSuccess){
+            // 只有在事务真正 Committed 之后，才触发
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    // 此时数据库已经板上钉钉是新数据了
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            stringRedisTemplate.delete(key);
+                        } catch (Exception e) {
+                            log.error("延时双删异常", e);
+                        }
+                    });
+                }
+            });
+        }
+
+        return updateSuccess;
     }
 
     /**
@@ -181,12 +245,24 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
 
 
     /*
-    * 辅助方法 ：根据传入的 bedId，去更新 bed 表里的 status 字段
-    * */
-    private void updateBedStatus(Integer bedId, Integer status) {
-        bedMapper.update(null, new LambdaUpdateWrapper<BedEntity>()
-                .eq(BedEntity::getId, bedId)
-                .set(BedEntity::getStatus, status));
+     * 辅助方法 ：根据传入的 bedId，去更新 bed 表里的 status 字段
+     * 返回 boolean 类型
+     * 增加乐观锁条件 (eq(BedEntity::getStatus, 0))
+     * */
+    private boolean updateBedStatus(Integer bedId, Integer status) {
+        // 只有当 status = 1 (占用床位) 时，才需要判断原状态是否为 0 (空闲)
+        // 如果是 status = 0 (释放床位)，可能不需要这么严苛的判断
+        LambdaUpdateWrapper<BedEntity> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(BedEntity::getId,bedId).set(BedEntity::getStatus,status);
+
+        if(status==1){
+            updateWrapper.eq(BedEntity::getStatus,0);//如果要修改为占用 本来必须是空闲
+        }
+
+        int rows=bedMapper.update(null,updateWrapper);
+
+        return rows>0;
+
     }
 
 
@@ -223,11 +299,11 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
         Map<Integer,String> employeeNameMap;
         Map<Integer,String> employeePhoneMap;
         if(Func.isNotEmpty(employeeIds)){
-            employeeNameMap=employeeService.listByIds(employeeIds).stream()
-                    .collect(Collectors.toMap(Employee::getId,Employee::getName));
+            employeeNameMap= IEmployeeService.listByIds(employeeIds).stream()
+                    .collect(Collectors.toMap(EmployeeEntity::getId, EmployeeEntity::getName));
 
-            employeePhoneMap=employeeService.listByIds(employeeIds).stream()
-                    .collect(Collectors.toMap(Employee::getId,Employee::getPhone));
+            employeePhoneMap= IEmployeeService.listByIds(employeeIds).stream()
+                    .collect(Collectors.toMap(EmployeeEntity::getId, EmployeeEntity::getPhone));
         }else{
             employeeNameMap=new HashMap<>();
             employeePhoneMap=new HashMap<>();
