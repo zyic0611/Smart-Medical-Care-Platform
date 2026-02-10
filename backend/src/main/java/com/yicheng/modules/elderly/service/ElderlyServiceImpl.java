@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yicheng.common.RedisConstants;
+import com.yicheng.common.Result;
+import com.yicheng.common.UserContext;
 import com.yicheng.common.enums.ResultCode;
 import com.yicheng.modules.bed.pojo.entity.BedEntity;
 import com.yicheng.modules.bed.service.IBedService;
@@ -20,12 +22,14 @@ import com.yicheng.modules.elderly.pojo.vo.ElderlyVO;
 import com.yicheng.modules.employee.pojo.entity.EmployeeEntity;
 import com.yicheng.modules.employee.service.IEmployeeService;
 import com.yicheng.modules.sysdict.service.ISysDictService;
+import com.yicheng.modules.user.entity.SysUser;
 import com.yicheng.utils.CacheClient;
 import com.yicheng.utils.Func;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -266,6 +272,68 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, ElderlyEntity
     }
 
 
+    public Result<String> sign(){
+        //获取当前用户
+        SysUser sysUser = UserContext.getUser();
+        if(sysUser==null){
+            return Result.error("401","当前用户不存在");
+        }
+        if(!sysUser.getRole().equals("ELDERLY")){
+            return Result.error("401","请用老人身份登录");
+        }
+        Long elderId=sysUser.getLinkId();
+        if(elderId==null){
+            return Result.error("401","该用户没有关联老人");
+        }
+        LocalDateTime now=LocalDateTime.now();
+
+        String key=RedisConstants.ELDERLY_SIGN_KEY+elderId+now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        int offset=now.getDayOfMonth()-1;//得出偏移量
+        Boolean isAlreadySigned =stringRedisTemplate.opsForValue().setBit(key, offset, true);
+        if(Boolean.TRUE.equals(isAlreadySigned)){
+            return Result.error("401","您今日已经打卡过了，请勿重复操作");
+        }
+
+
+        return Result.success("今日健康打卡成功");
+
+    }
+
+    public int getContinuousSignCount(){
+        SysUser sysUser = UserContext.getUser();
+        LocalDateTime now=LocalDateTime.now();
+        Long elderId=sysUser.getLinkId();
+        String key=RedisConstants.ELDERLY_SIGN_KEY+elderId+now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        int dayOfMonth=now.getDayOfMonth();
+
+        //获取本月截止到今天的打卡记录
+        List<Long> result=stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create().get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).valueAt(0)
+        );//
+        if(result==null||result.isEmpty()){
+            return 0;
+        }
+        Long num=result.get(0);//
+        if(num==null||num==0){
+            return 0;
+        }
+        // 3. 循环位运算，计算末尾连续 1 的个数
+        int count = 0;
+        while (true) {
+            // 让数字与 1 做与运算，判断最后一位是不是 1
+            if ((num & 1) == 0) {
+                // 如果最后一位是 0，说明连续中断了
+                break;
+            } else {
+                count++;
+            }
+            // 右移一位，检查前一天
+            num >>>= 1;
+        }
+        return count;
+
+    }
     private void setParaStr(List<ElderlyVO> list){
 
         if(Func.isEmpty(list)){

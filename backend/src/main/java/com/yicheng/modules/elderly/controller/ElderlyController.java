@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ElderlyController {
 
-    private final IElderlyService IElderlyService;
+    private final IElderlyService elderlyService;
 
     /**
      * 分页查询接口
@@ -38,7 +38,7 @@ public class ElderlyController {
             @RequestParam(defaultValue = "10") Integer pageSize
     ) {
 
-        IPage<ElderlyVO> pageResult = IElderlyService.selectElderlyPage(pageNum, pageSize, elderlyVO);
+        IPage<ElderlyVO> pageResult = elderlyService.selectElderlyPage(pageNum, pageSize, elderlyVO);
 
         return Result.success(pageResult);
     }
@@ -51,7 +51,7 @@ public class ElderlyController {
     @ApiOperationSupport(order = 2)
     public Result<Boolean> update(@RequestBody ElderlyUpdateDTO elderlyUpdateDTO){
 
-        return Result.success(IElderlyService.updateElderlyWithBed(elderlyUpdateDTO));
+        return Result.success(elderlyService.updateElderlyWithBed(elderlyUpdateDTO));
     }
 
 
@@ -62,7 +62,7 @@ public class ElderlyController {
     @ApiOperationSupport(order = 3)
     public Result<Boolean> add(@RequestBody ElderlyDTO elderlyDTO){
 
-        return Result.success(IElderlyService.addElderlyWithBed(elderlyDTO));
+        return Result.success(elderlyService.addElderlyWithBed(elderlyDTO));
     }
 
 
@@ -75,7 +75,7 @@ public class ElderlyController {
     public Result<Boolean> remove(@Parameter(description = "主键集合",required = true) @RequestParam String ids){
 
 
-        return Result.success(IElderlyService.deleteLogic(ids));
+        return Result.success(elderlyService.deleteLogic(ids));
     }
 
 
@@ -85,7 +85,20 @@ public class ElderlyController {
     public Result<IPage<ElderlyVO>> getElderlyWithImages(@RequestParam(defaultValue = "1") Integer pageNum,  // 默认第一页
                                                              @RequestParam(defaultValue = "10") Integer pageSize)  // 默认每页10条)
     {
-        return Result.success(IElderlyService.listElderlyWithImagingByPage(pageNum, pageSize));
+        return Result.success(elderlyService.listElderlyWithImagingByPage(pageNum, pageSize));
     }
+
+    @PostMapping("/sign")
+    @Operation(summary = "老人健康打卡")
+    public Result<String> sign(){
+        return elderlyService.sign();
+    }
+
+    @GetMapping("/sign/count")
+    @Operation(summary = "统计本月打卡数")
+    public Result<String> countSign(){
+        return Result.success("本月打卡天数："+elderlyService.getContinuousSignCount());
+    }
+
 
 }

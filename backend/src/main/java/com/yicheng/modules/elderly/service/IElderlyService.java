@@ -2,6 +2,7 @@ package com.yicheng.modules.elderly.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yicheng.common.Result;
 import com.yicheng.modules.elderly.pojo.dto.ElderlyDTO;
 import com.yicheng.modules.elderly.pojo.dto.ElderlyUpdateDTO;
 import com.yicheng.modules.elderly.pojo.entity.ElderlyEntity;
@@ -22,6 +23,9 @@ public interface IElderlyService extends IService<ElderlyEntity> {
 
     ElderlyVO detail(Long id);
 
+    Result<String> sign();
+
+    int getContinuousSignCount();
 
 
     IPage<ElderlyVO> listElderlyWithImagingByPage(Integer pageNum, Integer pageSize);
