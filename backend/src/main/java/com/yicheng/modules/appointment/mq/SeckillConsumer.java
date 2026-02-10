@@ -32,9 +32,11 @@ public class SeckillConsumer {
 
         Long doctorId = Long.valueOf(orderInfo.get("doctorId").toString());
         Long elderId = Long.valueOf(orderInfo.get("elderId").toString());
+        String orderToken = orderInfo.get("orderToken").toString();
 
         //log.info("【MQ消费者】开始处理秒杀订单：专家ID={}, 老人ID={}", doctorId, elderId);
 
+        //秒杀队列消费者 操作数据库 扣取库存
         boolean success = doctorService.update()
                 .setSql("stock=stock-1")
                 .eq("id", doctorId)
@@ -42,24 +44,42 @@ public class SeckillConsumer {
                 .update();
 
         if (success) {
-            // 如果扣减成功，生成预约记录 (下订单)
+            // 1 如果扣减成功，生成预约记录 (下订单)
             appointmentEntity appointment = new appointmentEntity();
             appointment.setDoctorId(doctorId);
             appointment.setElderId(elderId);
             appointment.setCreateTime(LocalDateTime.now());
-            appointment.setStatus(1); // 预约成功
-
+            appointment.setOrderSn(orderToken);
+            appointment.setStatus(1); // 初始状态为1 待支付
+            // 2插入数据库
             appointmentMapper.insert(appointment);
-            //log.info("【MQ消费者】下单成功！老人ID: {}", elderId);
+            Long orderId = appointment.getId();//插入后MP会自增ID 获取ID
+
+            //3把订单Id放入map
+            orderInfo.put("orderId", orderId);
+
+            //发送延迟信息 给15分钟后的超时处理队列
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.ORDER_DELAY_EXCHANGE,
+                    RabbitConfig.ORDER_DELAY_ROUTING,
+                    orderInfo
+            );
+
+            //log.info("【MQ下单】订单创建成功，ID: {}，已进入15分钟支付倒计时", orderId);
+
         } else {
-            // 这种情况极少发生（除非 Redis 和 DB 数据严重不一致，比如 DB 被人手动改了）
-            // 只有这时候才需要回滚 Redis
-            //log.error("【MQ消费者】DB扣减失败！可能出现数据同步问题。准备回滚 Redis...");
+           //数据库扣减失败 就要回滚redis内存
+            log.error("【警告】数据库库存已耗尽，请检查数据对账！");
+
+            //归还库存
             String stockKey = RedisConstants.DOCTOR_STOCK_KEY + doctorId;
             stringRedisTemplate.opsForValue().increment(stockKey);
 
-            // 这里的报错会触发事务回滚，如果配置了重试机制，消息可能会重新入队
-            throw new RuntimeException("秒杀库存同步异常");
+            //删除一人一单标志
+            String successKey=RedisConstants.SECKILL_SUCCESS_KEY+elderId+":"+doctorId;
+            stringRedisTemplate.delete(successKey);
+
+            return;
         }
     }
 

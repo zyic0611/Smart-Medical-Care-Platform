@@ -4,6 +4,7 @@ package com.yicheng.modules.appointment.controller;
 import com.yicheng.common.RedisConstants;
 import com.yicheng.common.Result;
 import com.yicheng.modules.appointment.pojo.entity.doctorEntity;
+import com.yicheng.modules.appointment.pojo.vo.doctorRankVO;
 import com.yicheng.modules.appointment.service.IDoctorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,12 +42,14 @@ public class DoctorController {
     @Operation(summary = "预约抢号")
     public Result<String> seckill(@RequestParam Long doctorId, @RequestParam Long elderId) {
         // 调用我们之前写好的包含乐观锁逻辑的 Service
-        String message = doctorService.seckill(doctorId, elderId);
+        String result    = doctorService.seckill(doctorId, elderId);
 
-        if (message.contains("成功") || message.contains("出票中")) {
-            return Result.success(message);
+        // 根据前缀判断是错误还是 Token
+        if (result.startsWith("err:")) {
+            return Result.error("500", result.replace("err:", ""));
         } else {
-            return Result.error("500", message);
+            // 返回的是 orderToken
+            return Result.success(result);
         }
     }
 
@@ -72,17 +75,36 @@ public class DoctorController {
         return Result.success("预热成功，redis专家号缓存已加载"+doctor.getStock()+"个号");
     }
 
-    @PostMapping("/update")
-    @Operation(summary = "修改医生")
-    public Result<String> update(@RequestParam Long doctorId) {
-        String msg=doctorService.updateDoctorInfo(doctorId);
+    @PostMapping("/result/{orderToken}")
+    @Operation(summary = "轮询抢号结果")
+    public Result<Object>getSeckillResult(@PathVariable String orderToken){
+        return doctorService.getSeckillResult(orderToken);
+    }
 
-        if ("修改成功".equals(msg)) {
-            return Result.success(msg);
-        } else {
-            // 如果是“正在修改”或者“系统异常”，统一返回 500
-            return Result.error("500", msg);
-        }
+
+
+    @PostMapping("/update/doctorStock")
+    @Operation(summary = "更新专家号库存")
+    public Result<String> updateDoctorStock(@RequestParam Long doctorId, @RequestParam Integer stock) {
+        boolean result=doctorService.updateDoctorStock(doctorId,stock);
+        if (result)
+            return Result.success("更新专家号库存成功,当前库存:"+stock);
+        return Result.error("500","库存更新失败，专家号不存在");
+    }
+
+    @PostMapping("/pay/{orderToken}")
+    @Operation(summary = "支付订单")
+    public Result<String> pay(@PathVariable String orderToken){
+        boolean result=doctorService.payAppointment(orderToken);
+        if(result)
+            return Result.success("支付订单成功，预约成功！");
+        return Result.error("500","请重新支付");
+    }
+
+    @PostMapping("/hot-rank")
+    @Operation(summary = "热门排行")
+    public Result<List<doctorRankVO>> getHotRank(){
+        return Result.success(doctorService.getHotRank());
     }
 
 }
